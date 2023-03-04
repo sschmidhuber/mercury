@@ -1,17 +1,17 @@
 # Mercury
-A simple file exchange server for home and small organisations
+A simple file exchange server for home and small organisations.
 
 # Mission Statement
 Exchanging files within a private network or via the internet is, under some circumstances, still challenging. Mercury is a file exchange server which brings your users the following possibilities:
 
-* Exchange files without the need to create an account at any service provider
-* Use any device with a modern web browser, like your phone, tablet, pc,... (no additional software requiered)
+* Exchange files __without the need to create an account__ at any service provider
+* Use __any device with a web browser__, like your phone, tablet, pc,... (no additional software requiered)
 * Run it within your own network, if you want to
 
 ## No-Goals
 Marcury is not trying to relpace any of the following solutions:
 
-* File synchronisation: Marcury is not synchronising any files, rather use [Syncthing|https://syncthing.net/] or any public service like Dropbox.
+* File synchronisation: Marcury is not synchronising any files, rather use [Syncthing](https://syncthing.net/) or any public service like Dropbox.
 * Network file system: Mercury not a network file system like NFS, SMB,... in contrary Mercury should allow file exchange also in a secure way, without managing user accounts.
 
 # Planned Features
