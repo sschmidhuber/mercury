@@ -21,4 +21,13 @@ To fulfill the set goals following features should be implementd:
 * Hidden files, allow access only with direct link or secret file ID
 * Custom data retention time on file upload
 * Malware check on file upload
-* Optional password protection and data encryption
+* Optional password protection
+
+# Ideas
+
+* Support large files (> 2GB) by automated file splitting on the client side
+* Timed availability of uploaded files, so the file becomes available only at a previously specified date and time
+* Maximum number of wrong password attempts on password protected files
+* Data encryption at rest
+* Email notifications on uploaded files, e.g. on download event, clean up, failed authorisation attempt,...
+* Directory support
