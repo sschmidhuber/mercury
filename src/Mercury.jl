@@ -4,15 +4,17 @@ module Mercury
 
 # https://xkcd.com/949/
 
-using Dates, UUIDs, MIMEs, TOML, Chain, JSON, Dash
-
 cd(@__DIR__)
+using Pkg
+Pkg.activate("..")
+using Dates, UUIDs, MIMEs, TOML, Chain, JSON3, HTTP, Oxygen
+
 const config = TOML.parsefile("../config/config.toml")
 
 include("model.jl")
 include("service.jl")
-include("view.jl")
+include("api.jl")
 
-run_server(app, config["network"]["ip"], config["network"]["port"]; debug=config["debug"])
+serve()
 
 end

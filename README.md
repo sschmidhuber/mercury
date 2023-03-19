@@ -31,3 +31,4 @@ To fulfill the set goals following features should be implementd:
 * Data encryption at rest
 * Email notifications on uploaded files, e.g. on download event, clean up, failed authorisation attempt,...
 * Directory support
+* Checksum to verify file identity
