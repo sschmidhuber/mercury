@@ -4,8 +4,6 @@
 db_dir = "../data/"
 storage_dir = "../data/"
 
-debug = true
-
 [network]
 ip = "0.0.0.0"
 port = 8000
