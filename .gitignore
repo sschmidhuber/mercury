@@ -23,4 +23,7 @@ docs/site/
 # environment.
 Manifest.toml
 
+# DrawIO backup files
+.$*
+
 data/

@@ -39,3 +39,7 @@ To fulfill the set goals following features should be implementd:
 ## System Context
 
 ![System Context](/doc/System%20Context.svg "System Context")
+
+## Component Diagram
+
+![Component Diagram](/doc/Component%20Diagram.svg "Component Diagram")
