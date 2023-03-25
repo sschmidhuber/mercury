@@ -32,3 +32,10 @@ To fulfill the set goals following features should be implementd:
 * Email notifications on uploaded files, e.g. on download event, clean up, failed authorisation attempt,...
 * Directory support
 * Checksum to verify file identity
+* IP based, restricted access to dataset downloads (to support file download from public internet)
+
+# Architecture
+
+## System Context
+
+![System Context](/doc/System%20Context.png "System Context")
