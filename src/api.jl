@@ -6,16 +6,19 @@
 end
 
 @post "/dataset" function(req)
-    id = uuid4()
     content = HTTP.parse_multipart_form(req)
-    filename = content[1].filename
-    path = joinpath(config["storage_dir"], "tmp", string(id), filename)
-    type = content[1].contenttype
-
-    open(path,"w") do f
-        write(f, content[1].data)
+    id = uuid4()    
+    label = content[1].data.data |> String
+    if label == ""
+        label = "Data Set $(today())"
     end
-    create_dataset(id, filename, type)
+
+    filenames = map(c -> c.filename, content[2:end])
+    types = map(c -> c.contenttype |> MIME, content[2:end])
+    iobuffers = map(c -> c.data, content[2:end])
+    sizes = map(io -> bytesavailable(io), iobuffers)
+
+    add_dataset(id, label, filenames, types, sizes, iobuffers)
 
     return "uploaded as new data set: $id"
 end

@@ -6,8 +6,29 @@ dslock = ReentrantLock()
 
 """
     create_dataset(ds::DataSet)
+
+Create a new DataSet.
 """
-function create_dataset(ds::DataSet)
+function create_dataset(ds::DataSet, iobuffers)
+    path = joinpath(config["storage_dir"], "tmp", string(ds.id))
+    try
+        mkpath(path)        
+    catch e
+        showerror(stderr, e)
+        throw(ErrorException("failed to create tmp directory for \"$(ds.id)\""))
+    end
+
+    try
+        for i in eachindex(iobuffers)
+            open(joinpath(path, ds.filename[i]),"w") do p
+                write(p, iobuffers[i])
+            end
+        end
+    catch e
+        showerror(stderr, e)
+        throw(ErrorException("failed to write data of \"$(ds.id)\" to disk"))
+    end
+
     lock(dslock)
     try
         datasets[ds.id] = ds

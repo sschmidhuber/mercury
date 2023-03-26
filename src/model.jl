@@ -36,19 +36,21 @@ end
 """
 Base.@kwdef mutable struct DataSet
     id::UUID
-    filename::String
+    label::String
+    filename::Vector{String}
     stage::Stage = initial
     timestamp::DateTime = now()
     retention::Int = config["retention"]["default"]
     hidden::Bool = false
     protected::Bool = false
-    type::MIME
-    size::Int
+    type::Vector{MIME}
+    size::Vector{Int}
 end
 
 function isequal(x::DataSet, y::DataSet)
     x.id == y.id &&
     x.filename == y.filename &&
+    x.label == y.label &&
     x.stage == y.stage &&
     x.timestamp == y.timestamp &&
     x.retention == y.retention &&
@@ -61,13 +63,14 @@ end
 function dataset(dict::Dict)
     DataSet(
         UUID(dict["id"]),
+        dict["label"],
         dict["filename"],
         stage(dict["stage"]),
-        DateTime(dict["timestamp"]),
+        DateTime.(dict["timestamp"]),
         dict["retention"],
         dict["hidden"],
         dict["protected"],
-        MIME(dict["type"]),
+        MIME.(dict["type"]),
         dict["size"]
     )
 end
