@@ -1,12 +1,24 @@
+import Base.isequal
 import JSON.Writer
 
+"""
+A DataSet moves through different stages during its lifecycle:
 
+        1. initial: upload and preprocessing
+        2. available: DataSet can be downloaded
+        3. deleted: After retention time the DataSet will be marked as deleted
+"""
 @enum Stage begin
     initial
     available
     deleted
 end
 
+"""
+    stage(str::AbstractString)
+
+Return the stage enum corresponding to the given string representation.
+"""
 function stage(str::AbstractString)
     if str == "initial"
         Stage(0)
@@ -19,7 +31,9 @@ function stage(str::AbstractString)
     end
 end
 
-
+"""
+    A DataSet is a logic representation of one or more files of random type.
+"""
 Base.@kwdef mutable struct DataSet
     id::UUID
     filename::String
@@ -30,6 +44,18 @@ Base.@kwdef mutable struct DataSet
     protected::Bool = false
     type::MIME
     size::Int
+end
+
+function isequal(x::DataSet, y::DataSet)
+    x.id == y.id &&
+    x.filename == y.filename &&
+    x.stage == y.stage &&
+    x.timestamp == y.timestamp &&
+    x.retention == y.retention &&
+    x.hidden == y.hidden &&
+    x.protected == y.protected &&
+    x.type == y.type &&
+    x.size == y.size
 end
 
 function dataset(dict::Dict)
@@ -46,10 +72,10 @@ function dataset(dict::Dict)
     )
 end
 
-function dataset(array::Vector)
+function unmarshal_dataset(dict::Dict)
     datasets = Dict{UUID, DataSet}()
 
-    foreach(array) do element
+    foreach(values(dict)) do element
         ds = dataset(element)
         datasets[ds.id] = ds
     end

@@ -10,30 +10,12 @@ Pkg.activate("..")
 using Dates, UUIDs, MIMEs, TOML, Chain, JSON, HTTP, Oxygen
 
 const config = TOML.parsefile("../config/config.toml")
-datasets = nothing
-dslock = ReentrantLock()
+
 
 include("model.jl")
+include("persistence.jl")
 include("service.jl")
 include("api.jl")
-
-function initdb()
-    dbpath = joinpath(config["db_dir"], "database.json")
-    lock(dslock)
-    try
-        if isfile(dbpath)
-            global datasets = read(dbpath, String) |> JSON.parse
-            if !isempty(datasets)
-                global datasets = datasets |> dataset
-            end
-        else
-            global datasets = Dict{UUID, DataSet}()
-            storeds()
-        end
-    finally
-        unlock(dslock)
-    end
-end
 
 function main()
     # initialize flat file DB
