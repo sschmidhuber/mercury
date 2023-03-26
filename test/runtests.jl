@@ -4,7 +4,7 @@ include("../src/Mercury.jl")
 using Test, UUIDs
 
 
-@testset "Persistence Tests" begin
+@testset "Persistence" begin
     # initialize flat file DB
     Mercury.initdb()
     @test !isnothing(Mercury.datasets)

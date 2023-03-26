@@ -2,11 +2,11 @@
 A simple file exchange server for home and small organisations.
 
 # Mission Statement
-Exchanging files within a private network or via the internet is, under some circumstances, still challenging. Mercury is a file exchange server which brings your users the following possibilities:
+Exchanging files within a private network or via the internet is, under some circumstances, still challenging. Mercury is going to be a file exchange server with following features:
 
 * Exchange files __without the need to create an account__ at any service provider
 * Use __any device with a web browser__, like your phone, tablet, pc,... (no additional software requiered)
-* Run it within your own network, if you want to
+* Run within your own network, i.e. a single board computer
 
 ## No-Goals
 Marcury is not trying to relpace any of the following solutions:
@@ -22,6 +22,7 @@ To fulfill the set goals following features should be implementd:
 * Custom data retention time on file upload
 * Malware check on file upload
 * Optional password protection
+* File and data set size limits
 
 # Ideas
 

@@ -8,3 +8,8 @@ function add_dataset(id::UUID, label::String, filename::Vector{String}, type::Ve
 
     create_dataset(ds, iobuffers)
 end
+
+
+function process_dataset(id::UUID)
+    @info "process dataset"
+end
