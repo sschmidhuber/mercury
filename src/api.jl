@@ -32,5 +32,5 @@ end
     add_dataset(id, label, filenames, types, sizes, iobuffers)
     @async process_dataset($id)
 
-    return JSON.json("id" => id)
+    return ("id" => id)
 end

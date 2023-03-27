@@ -33,7 +33,8 @@ To fulfill the set goals following features should be implementd:
 * Email notifications on uploaded files, e.g. on download event, clean up, failed authorisation attempt,...
 * Directory support
 * Checksum to verify file identity
-* IP based, restricted access to dataset downloads (to support file download from public internet)
+* Access to datasets from public internet (IP restricted)
+* Upload links to allow uploads from public internet
 
 # Architecture
 
