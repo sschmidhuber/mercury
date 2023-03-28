@@ -99,6 +99,46 @@ function update_dataset(ds::DataSet)
 end
 
 
+function promote_dataset(id::UUID)
+    lock(dslock)
+    try
+        local ds
+        if haskey(datasets, id)
+            ds = datasets[id]
+        else
+            throw(DomainError(id |> string, "Invalid ID, DataSet not found"))
+        end
+
+        if ds.stage != scanned
+            throw(DomainError(ds.stage, "Invalid stage, \"scanned\" expected"))            
+        end
+
+        tmppath = joinpath(config["storage_dir"], "tmp", string(id))
+        livepath = joinpath(config["storage_dir"], "live", string(id))
+        mkpath(livepath)
+
+        if ds.filename |> length == 1
+            mv(joinpath(tmppath, ds.filename[1]), joinpath(livepath, ds.filename[1]))
+        else
+            foreach(ds.filename) do file
+                @info "$file"
+                run(Cmd(`zip $(ds.label).zip "$file"`, dir=tmppath))
+            end
+            mv(joinpath(tmppath, "$(ds.label).zip"), joinpath(livepath, "$(ds.label).zip"))
+        end
+        rm(tmppath, recursive=true)
+
+        ds.stage = available
+        storeds()
+    catch e
+        showerror(stderr, e)
+        throw(ErrorException("DataSet promotion failed for: $id"))
+    finally
+        unlock(dslock)
+    end
+end
+
+
 """
     delete_dataset(id::UUID)
 

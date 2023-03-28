@@ -5,11 +5,13 @@ import JSON.Writer
 A DataSet moves through different stages during its lifecycle:
 
         1. initial: upload and preprocessing
-        2. available: DataSet can be downloaded
-        3. deleted: After retention time the DataSet will be marked as deleted
+        2. scanned: malware scan completed with no findings
+        3. available: DataSet can be downloaded
+        4. deleted: After retention time the DataSet will be marked as deleted
 """
 @enum Stage begin
     initial
+    scanned
     available
     deleted
 end
@@ -22,10 +24,12 @@ Return the stage enum corresponding to the given string representation.
 function stage(str::AbstractString)
     if str == "initial"
         Stage(0)
-    elseif str == "available"
+    elseif str == "scanned"
         Stage(1)
-    elseif str == "deleted"
+    elseif str == "available"
         Stage(2)
+    elseif str == "deleted"
+        Stage(3)
     else
         throw(DomainError(str))
     end

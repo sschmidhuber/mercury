@@ -10,6 +10,24 @@ function add_dataset(id::UUID, label::String, filename::Vector{String}, type::Ve
 end
 
 
+"""
+    process_dataset(id::UUID)
+
+Process a newly uploaded dataset.
+"""
 function process_dataset(id::UUID)
-    @info "process dataset"
+    @warn "malware check (not implemented yet, this is just mocked)"
+    ds = read_dataset(id)
+    # mock malware check
+    sleep(10)
+    ds.stage = scanned
+    update_dataset(ds)
+
+    @info "check DataSet consistency (not implemented yet)"
+    # availability of all files in expected size and type
+
+    @info "optimize storage (not implemented yet)"
+    
+    @info "prepare for download"
+    promote_dataset(id)
 end
