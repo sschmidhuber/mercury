@@ -19,7 +19,7 @@ function process_dataset(id::UUID)
     @warn "malware check (not implemented yet, this is just mocked)"
     ds = read_dataset(id)
     # mock malware check
-    sleep(10)
+    sleep(1)
     ds.stage = scanned
     update_dataset(ds)
 
@@ -30,4 +30,19 @@ function process_dataset(id::UUID)
     
     @info "prepare for download"
     promote_dataset(id)
+end
+
+
+function status(id::UUID)
+    ds = read_dataset(id)
+    size = round(sum(ds.size) / 1024 / 1024, digits=2)
+
+    Dict(
+        "id" => id,
+        "label" => ds.label,
+        "stage" => ds.stage,
+        "size" => "$size MiB",
+        "timestamp" => ds.timestamp,
+        "retention_time" => ds.retention
+    )
 end

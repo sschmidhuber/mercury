@@ -25,9 +25,9 @@ function main()
     serve(host=config["network"]["ip"], port=config["network"]["port"])
 end
 
-#if !isinteractive()
+if !isinteractive()
     main()
-#end
+end
 
 
 end

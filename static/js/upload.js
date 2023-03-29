@@ -30,7 +30,7 @@ async function uploadDataSet(event) {
     }
     newUpload.hidden = true
     uploadStatus.hidden = false
-    res = await fetch('/dataset', {method: "POST", body: formData})
+    res = await fetch('/datasets', {method: "POST", body: formData})
     .then((response) => response.json())
     .then((data) => data)
     spinner.hidden = true

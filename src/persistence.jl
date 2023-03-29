@@ -100,32 +100,32 @@ end
 
 
 function promote_dataset(id::UUID)
+    local ds
+    if haskey(datasets, id)
+        ds = datasets[id]
+    else
+        throw(DomainError(id |> string, "Invalid ID, DataSet not found"))
+    end
+
+    if ds.stage != scanned
+        throw(DomainError(ds.stage, "Invalid stage, \"scanned\" expected"))            
+    end
+
+    tmppath = joinpath(config["storage_dir"], "tmp", string(id))
+    livepath = joinpath(config["storage_dir"], "live", string(id))
+    mkpath(livepath)
+
+    if ds.filename |> length == 1
+        mv(joinpath(tmppath, ds.filename[1]), joinpath(livepath, ds.filename[1]))
+    else
+        foreach(ds.filename) do file
+            run(Cmd(`zip -q $(ds.label).zip "$file"`, dir=tmppath))
+        end
+        mv(joinpath(tmppath, "$(ds.label).zip"), joinpath(livepath, "$(ds.label).zip"))
+    end
+
     lock(dslock)
     try
-        local ds
-        if haskey(datasets, id)
-            ds = datasets[id]
-        else
-            throw(DomainError(id |> string, "Invalid ID, DataSet not found"))
-        end
-
-        if ds.stage != scanned
-            throw(DomainError(ds.stage, "Invalid stage, \"scanned\" expected"))            
-        end
-
-        tmppath = joinpath(config["storage_dir"], "tmp", string(id))
-        livepath = joinpath(config["storage_dir"], "live", string(id))
-        mkpath(livepath)
-
-        if ds.filename |> length == 1
-            mv(joinpath(tmppath, ds.filename[1]), joinpath(livepath, ds.filename[1]))
-        else
-            foreach(ds.filename) do file
-                @info "$file"
-                run(Cmd(`zip $(ds.label).zip "$file"`, dir=tmppath))
-            end
-            mv(joinpath(tmppath, "$(ds.label).zip"), joinpath(livepath, "$(ds.label).zip"))
-        end
         rm(tmppath, recursive=true)
 
         ds.stage = available
@@ -143,12 +143,26 @@ end
     delete_dataset(id::UUID)
 
 Delete the DataSet corresponding to the given ID, do nothing if the id was not found.
+If purge = true is passed, the DB entry will not only be set to deleted, but the record will
+be deleted from the DB.
+
+In any case the files related to the DataSet will be deleted from disk.
 """
-function delete_dataset(id::UUID)
+function delete_dataset(id::UUID; purge=false)
     lock(dslock)
     try
         if haskey(datasets, id)
-            delete!(datasets, id)
+            tmppath = joinpath(config["storage_dir"], "tmp", string(id))
+            rm(tmppath, force=true, recursive=true)
+
+            livepath = joinpath(config["storage_dir"], "live", string(id))
+            rm(livepath, force=true, recursive=true)
+
+            if purge
+                delete!(datasets, id)
+            else
+                datasets[id].stage = deleted
+            end
             storeds()
         end
     finally
