@@ -26,6 +26,7 @@ To fulfill the set goals following features should be implementd:
 
 # Ideas
 
+* Display download links as QR codes to share files on mobile devices
 * Support large files (> 2GB) by automated file splitting on the client side
 * Timed availability of uploaded files, so the file becomes available only at a previously specified date and time
 * Maximum number of wrong password attempts on password protected files

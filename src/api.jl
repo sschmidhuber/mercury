@@ -8,14 +8,12 @@ end
 @post "/datasets" function(req)
     contenttype = HTTP.headers(req, "Content-Type")
     if isempty(contenttype) || !contains(contenttype[1], "multipart/form-data")
-        @info "invalid Content-Type at POST /dataset"
-        return HTTP.Response(415, "Expect \"multipart/form-data\" request")
+        return HTTP.Response(415, Dict("error" => "invalid Content-Type", "detail" => "Expect \"multipart/form-data\""))
     end
 
     content = HTTP.parse_multipart_form(req)
     if content |> isnothing
-        @warn "failed to parse multipart form data"
-        return HTTP.Response(422, "invalid request content")
+        return HTTP.Response(422, Dict("error" => "invalid request content", "detail" => "parsing multipart form failed"))
     end
     id = uuid4()    
     label = content[1].data.data |> String
@@ -29,8 +27,7 @@ end
     sizes = map(io -> bytesavailable(io), iobuffers)
 
     if filenames[1] == ""
-        @warn "invalid request content"
-        return HTTP.Response(422, "invalid request content")
+        return HTTP.Response(422, Dict("error" => "invalid request content"))
     end
 
     add_dataset(id, label, filenames, types, sizes, iobuffers)
@@ -39,6 +36,17 @@ end
     return ("id" => id)
 end
 
+
+@get "/datasets/status" function(req)
+    status()
+end
+
+
 @get "/datasets/{id}/status" function(req, id::String)
-    status(UUID(id))
+    res = status(UUID(id))
+    if isnothing(res)
+        return HTTP.Response(404, Dict("error" => "no DataSet with ID: $id found"))
+    end
+
+    return res
 end

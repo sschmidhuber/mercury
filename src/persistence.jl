@@ -3,7 +3,6 @@ datasets = nothing
 dslock = ReentrantLock()
 
 
-
 """
     create_dataset(ds::DataSet)
 
@@ -22,6 +21,7 @@ function create_dataset(ds::DataSet, iobuffers)
         for i in eachindex(iobuffers)
             open(joinpath(path, ds.filename[i]),"w") do p
                 write(p, iobuffers[i])
+                close(iobuffers[i])
             end
         end
     catch e
@@ -118,9 +118,7 @@ function promote_dataset(id::UUID)
     if ds.filename |> length == 1
         mv(joinpath(tmppath, ds.filename[1]), joinpath(livepath, ds.filename[1]))
     else
-        foreach(ds.filename) do file
-            run(Cmd(`zip -q $(ds.label).zip "$file"`, dir=tmppath))
-        end
+        run(Cmd(`zip -0 -q $(ds.label).zip $(ds.filename)`, dir=tmppath))
         mv(joinpath(tmppath, "$(ds.label).zip"), joinpath(livepath, "$(ds.label).zip"))
     end
 
@@ -183,6 +181,104 @@ function storeds()
     end
 end
 
+
+"""
+    checkds(ds::DataSet)
+
+Check the consistency of a given Data Set.
+"""
+function checkds(ds::DataSet)
+    tmppath = joinpath(config["storage_dir"], "tmp", string(ds.id))
+    livepath = joinpath(config["storage_dir"], "live", string(ds.id))
+
+    if ds.stage == deleted
+        if ispath(tmppath)
+            @warn "$(ds.label) - $(ds.stage): inconsistend data found"
+            rm(tmppath, recursive=true)
+        end
+        if ispath(livepath)
+            @warn "$(ds.label) - $(ds.stage): inconsistend data found"
+            rm(livepath, recursive=true)
+        end
+    elseif ds.stage == available
+        if ispath(tmppath)
+            @warn "$(ds.label) - $(ds.stage): inconsistend data found"
+            rm(tmppath, recursive=true)
+        end
+    elseif ds.stage == initial
+        if ispath(livepath)
+            @warn "$(ds.label) - $(ds.stage): violation of data lifecycle constraint found"
+            rm(livepath, recursive=true)
+        end
+    end
+end
+
+
+"""
+    removeds(id::UUID)
+
+Remove all artifacts of a inconsistent Data Set, on logical and physical level.
+"""
+function removeds(id::UUID)
+    tmppath = joinpath(config["storage_dir"], "tmp", string(id))
+    livepath = joinpath(config["storage_dir"], "live", string(id))
+    delete!(datasets, id)
+    rm(tmppath, force=true, recursive=true)
+    rm(livepath, force=true, recursive=true)
+end
+
+
+function checkstorage()
+    tmppath = joinpath(config["storage_dir"], "tmp")
+    livepath = joinpath(config["storage_dir"], "live")
+
+    foreach(readdir(tmppath)) do id
+        if haskey(datasets, UUID(id))
+            ds = datasets[UUID(id)]
+            if !(ds.stage == initial || ds.stage == scanned)
+                @warn "$(ds.label) - $(ds.stage): inconsistend DB record found"
+                removeds(ds.id)
+            end
+        else
+            @warn "$id: orphaned data set found"
+            removeds(UUID(id))
+        end
+    end
+
+    foreach(readdir(livepath)) do id
+        if haskey(datasets, UUID(id))
+            ds = datasets[UUID(id)]
+            if !(ds.stage == available || ds.stage == scanned)
+                @warn "$(ds.label) - $(ds.stage): inconsistend DB record found"
+                removeds(ds.id)
+            end
+        else
+            @warn "$id: orphaned data set found"
+            removeds(UUID(id))
+        end
+    end
+end
+
+
+"""
+    correct_inconsistencies()
+
+Correct inconsistencies in the logical Data Set representations and physically stored data sets.
+"""
+function correct_inconsistencies()
+    lock(dslock)
+    try
+        # check database
+        foreach(values(datasets)) do ds
+            checkds(ds::DataSet)
+        end
+
+        # check storage
+        checkstorage()
+    finally
+        unlock(dslock)
+    end
+end
 
 """
     initdb()

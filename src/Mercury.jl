@@ -20,6 +20,7 @@ include("api.jl")
 function main()
     # initialize flat file DB
     initdb()
+    correct_inconsistencies()
 
     # start webserver
     serve(host=config["network"]["ip"], port=config["network"]["port"])
