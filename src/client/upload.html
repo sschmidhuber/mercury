@@ -67,7 +67,12 @@
             white-space: nowrap;
             -webkit-overflow-scrolling: touch;
         }
-                        </style>
+
+        .spinner-border {
+          width: 1.5rem;
+          height: 1.5rem;
+        }
+      </style>
   </head>
   <body>
     <main>
@@ -99,7 +104,7 @@
         <div class="bg-light p-5 rounded">
           <div id="newUpload" class="col-sm-8 mx-auto">
             <h1>
-              Upload new file
+              Upload new data set
             </h1>
             <div id="alertPlaceholder"></div>
             <!--
@@ -126,9 +131,28 @@
             
           </div>
           <div id="uploadStatus" class="col-sm-8 mx-auto" hidden>
-            <div id="spinner" class="spinner-border" role="status">
-              <span class="visually-hidden">Loading...</span>
-            </div>          
+            <h1>
+              Create new data set
+            </h1>
+            <div id="uploadDataset" class="alert alert-primary" role="alert">
+              <div class="d-flex align-items-center">
+                upload data to server
+                <div class="spinner-border ms-auto" role="status" aria-hidden="true"></div>
+              </div>
+            </div>
+            <div id="checkMalware" class="alert alert-secondary" role="alert">
+              <div class="d-flex align-items-center">
+                check for malware
+                <div class="spinner-border ms-auto" role="status" aria-hidden="true" hidden></div>
+              </div>
+            </div>
+            <div id="prepareDataset" class="alert alert-secondary" role="alert">
+              <div class="d-flex align-items-center">
+                prepare data for download
+                <div class="spinner-border ms-auto" role="status" aria-hidden="true" hidden></div>
+              </div>
+            </div>
+                  
             <p id="infoPanel"></p>            
           </div>
         </div>

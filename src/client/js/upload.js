@@ -8,12 +8,16 @@ const fileSelector = document.querySelector("#fileSelector")
 const uploadButton = document.querySelector("#uploadButton")
  
 const uploadStatus = document.querySelector("#uploadStatus")
-const spinner = document.querySelector("#spinner")
+const uploadDataset = document.querySelector("#uploadDataset")
+const checkMalware = document.querySelector("#checkMalware")
+const prepareDataset = document.querySelector("#prepareDataset")
 const infoPanel = document.querySelector("#infoPanel")
 
 
 // init
 uploadLink.classList.add("active")
+dsStage = null
+updateIntervalID = null
 
 const alert = (message, type) => {
     const wrapper = document.createElement('div')
@@ -29,13 +33,12 @@ const alert = (message, type) => {
 
 
 // listeners
-uploadButton.addEventListener("click", uploadDataSet)
-
+uploadButton.addEventListener("click", upload)
 
 //functions
-async function uploadDataSet(event) {
+async function upload(event) {
     event.preventDefault()
-    oldAlert = document.querySelector(".alert")
+    oldAlert = document.querySelector("#newUpload .alert")
     if (oldAlert != null) {
         oldAlert.remove()    
     }
@@ -54,9 +57,78 @@ async function uploadDataSet(event) {
     }
     newUpload.hidden = true
     uploadStatus.hidden = false
-    res = await fetch('/datasets', {method: "POST", body: formData})
-    .then((response) => response.json())
+    resCode = null
+    resBody = await fetch('/datasets', {method: "POST", body: formData})
+    .then((response) => {
+        resCode = response.status
+        return response.json()
+    })
     .then((data) => data)
-    spinner.hidden = true
-    infoPanel.textContent = "Data Set: " + res.id + " uploaded!"
+    
+    if (resCode == 200) {
+        successStatus(uploadDataset)
+        inprogressStatus(checkMalware)
+        infoPanel.textContent = "Data Set ID: " + resBody.id
+
+        dsStage = "initial"
+        updateIntervalID = setInterval(() => {
+            updateStatus(resBody.id)
+        }, 1000);
+    } else {
+        failedStatus(uploadDataset)
+        infoPanel.textContent = "Upload failed: " + resBody.error
+    }
+}
+
+async function updateStatus(id) {
+    resCode = null
+    resBody = await fetch("/datasets/" + id + "/status", {method: "GET"})
+    .then((response) => {
+        resCode = response.status
+        return response.json()
+    })
+    .then((data) => data)
+    
+    if (resCode == 200) {
+        if (resBody.stage != dsStage) {
+            switch (resBody.stage) {
+                case "scanned":
+                    successStatus(checkMalware)
+                    inprogressStatus(prepareDataset)
+                    break;
+                case "available":
+                    successStatus(checkMalware)
+                    successStatus(prepareDataset)
+                    clearInterval(updateIntervalID)
+                    // show link and DataSet preview
+                    break;            
+                default:
+                    // add error handling
+                    break;
+            }
+            dsStage = resBody.stage
+        }
+    } else {
+        // add error handling
+        infoPanel.textContent = "Upload failed: " + resBody.error
+    }
+}
+
+// sets a step element (uploadDataset, malwareCheck or prepareDataset) to success
+function successStatus(step) {
+    step.childNodes[1].children[0].hidden = true
+    step.classList.remove("alert-primary")
+    step.classList.add("alert-success")
+}
+
+function failedStatus(step) {
+    step.childNodes[1].children[0].hidden = true
+    step.classList.remove("alert-primary")
+    step.classList.add("alert-danger")    
+}
+
+function inprogressStatus(step) {
+    step.childNodes[1].children[0].hidden = false
+    step.classList.remove("alert-secondary")
+    step.classList.add("alert-primary")      
 }
