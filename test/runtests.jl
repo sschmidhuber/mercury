@@ -1,18 +1,21 @@
 cd(@__DIR__)
 include("../src/Mercury.jl")
 
-using Test, UUIDs, HTTP
-
+using Test, UUIDs, HTTP, JSON
 
 @testset "Persistence" begin
     # initialize flat file DB
     Mercury.initdb()
     @test !isnothing(Mercury.datasets)
+    Mercury.correct_inconsistencies()
     
     # create and read all
     dscount = length(Mercury.read_datasets())
-    ds1 = Mercury.DataSet(id=uuid4(), label="DataSet 1", filename=["Test File 1.jpg"], type=[MIME("image/jpeg")], size=[0])
+    ds1 = Mercury.DataSet(uuid4(), "DataSet 1", ["Test Data"], ["Test File 1.jpg"], 1, [MIME("image/jpeg")], [1105637])
     iobuffer = open(joinpath("..","test", "data", "mercury.png"))
+
+    #### the iobuffer is not getting processed correctly, this is a bug int he test
+
     Mercury.create_dataset(ds1, iobuffer)
     @test dscount + 1 == Mercury.read_datasets() |> length
 
@@ -30,7 +33,7 @@ using Test, UUIDs, HTTP
     Mercury.delete_dataset(ds1.id)
     @test (Mercury.read_dataset(ds1.id)).stage == Mercury.deleted
 
-    # here is a bug to fix, deleted state doesn't get written to DB
+    #### here is a bug to fix, deleted state doesn't get written to DB
     # @show Mercury.read_dataset(ds1.id)
 
     Mercury.delete_dataset(ds1.id, purge=true)
@@ -74,9 +77,12 @@ end;
         # get status
         for _ in 1:5
             res = HTTP.request("GET", "http://127.0.0.1:8123/datasets/$id2/status")
-            @show res.body |> String |> JSON.parse
-            sleep(5)
+            res = res.body |> String |> JSON.parse
+            @info "$(res["label"]) stage: $(res["stage"])"
+            sleep(1)
         end
+
+        HTTP.request("GET", "http://127.0.0.1:8123/datasets/status")
     finally
         Mercury.terminate()
     end

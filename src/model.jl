@@ -38,44 +38,55 @@ end
 """
     A DataSet is a logic representation of one or more files of random type.
 """
-Base.@kwdef mutable struct DataSet
+mutable struct DataSet
     id::UUID
     label::String
-    filename::Vector{String}
-    stage::Stage = initial
-    timestamp::DateTime = now()
-    retention::Int = config["retention"]["default"]
-    hidden::Bool = false
-    protected::Bool = false
-    type::Vector{MIME}
-    size::Vector{Int}
+    tags::Vector{String}
+    filenames::Vector{String}
+    stage::Stage
+    stagechange::DateTime
+    timestamp::DateTime
+    retention::Int
+    hidden::Bool
+    protected::Bool
+    public::Bool
+    types::Vector{MIME}
+    sizes::Vector{Int}
 end
+
+DataSet(id, label, tags, filenames, retention, types, sizes) = DataSet(id, label, tags, filenames, initial, now(), now(), retention, false, false, false, types, sizes)
 
 function isequal(x::DataSet, y::DataSet)
     x.id == y.id &&
-    x.filename == y.filename &&
+    x.filenames == y.filenames &&
     x.label == y.label &&
+    x.tags == y.tags &&
     x.stage == y.stage &&
+    x.stagechange == y.stagechange &&
     x.timestamp == y.timestamp &&
     x.retention == y.retention &&
     x.hidden == y.hidden &&
     x.protected == y.protected &&
-    x.type == y.type &&
-    x.size == y.size
+    x.public == y.public &&
+    x.types == y.types &&
+    x.sizes == y.sizes
 end
 
 function dataset(dict::Dict)
     DataSet(
         UUID(dict["id"]),
         dict["label"],
-        dict["filename"],
+        dict["tags"],
+        dict["filenames"],
         stage(dict["stage"]),
-        DateTime.(dict["timestamp"]),
+        DateTime(dict["stagechange"]),
+        DateTime(dict["timestamp"]),
         dict["retention"],
         dict["hidden"],
         dict["protected"],
-        MIME.(dict["type"]),
-        dict["size"]
+        dict["public"],
+        MIME.(dict["types"]),
+        dict["sizes"]
     )
 end
 

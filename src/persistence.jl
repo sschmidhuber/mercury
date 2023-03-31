@@ -19,7 +19,7 @@ function create_dataset(ds::DataSet, iobuffers)
 
     try
         for i in eachindex(iobuffers)
-            open(joinpath(path, ds.filename[i]),"w") do p
+            open(joinpath(path, ds.filenames[i]),"w") do p
                 write(p, iobuffers[i])
                 close(iobuffers[i])
             end
@@ -115,10 +115,10 @@ function promote_dataset(id::UUID)
     livepath = joinpath(config["storage_dir"], "live", string(id))
     mkpath(livepath)
 
-    if ds.filename |> length == 1
-        mv(joinpath(tmppath, ds.filename[1]), joinpath(livepath, ds.filename[1]))
+    if ds.filenames |> length == 1
+        mv(joinpath(tmppath, ds.filenames[1]), joinpath(livepath, ds.filenames[1]))
     else
-        run(Cmd(`zip -0 -q $(ds.label).zip $(ds.filename)`, dir=tmppath))
+        run(Cmd(`zip -0 -q $(ds.label).zip $(ds.filenames)`, dir=tmppath))
         mv(joinpath(tmppath, "$(ds.label).zip"), joinpath(livepath, "$(ds.label).zip"))
     end
 

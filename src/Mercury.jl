@@ -23,7 +23,7 @@ function main()
     correct_inconsistencies()
 
     # start webserver
-    serve(host=config["network"]["ip"], port=config["network"]["port"])
+    serveparallel(host=config["network"]["ip"], port=config["network"]["port"])
 end
 
 if !isinteractive()

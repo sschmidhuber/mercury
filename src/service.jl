@@ -3,9 +3,8 @@
 
 Add a new Data Set
 """
-function add_dataset(id::UUID, label::String, filename::Vector{String}, type::Vector{T} where T <: MIME, size::Vector{Int}, iobuffers)
-    ds = DataSet(id=id, label=label, filename=filename, type=type, size=size)
-
+function add_dataset(id::UUID, label::String, filenames::Vector{String}, types::Vector{T} where T <: MIME, sizes::Vector{Int}, iobuffers)
+    ds = DataSet(id, label, [], filenames, config["retention"]["default"], types, sizes)
     create_dataset(ds, iobuffers)
 end
 
@@ -70,7 +69,7 @@ end
 
 Translates a given retention time stamp into time left, e.g. "2 days"
 """
-function format_period(timestamp::DateTime)::String
+function format_retention(timestamp::DateTime)::String
     current_time = now()
     local period
 
@@ -84,8 +83,10 @@ function format_period(timestamp::DateTime)::String
         period = round(timestamp - current_time, Hour) |> string
     elseif round(timestamp - current_time, Second) > Second(55)
         period = round(timestamp - current_time, Minute) |> string
-    else
+    elseif round(timestamp - current_time, Second) >= Second(0)
         period = "less than a minute"
+    else
+        period = "retention time expired"
     end
 
     return period
@@ -97,16 +98,20 @@ function status(id::UUID)
     if isnothing(ds)
         return nothing
     end
-    size = format_size(ds.size |> sum)
+    size = format_size(ds.sizes |> sum)
+    time_left = format_retention(ds.timestamp + Hour(ds.retention))
 
     Dict(
         "id" => id,
         "label" => ds.label,
+        "tags" => ds.tags,
         "stage" => ds.stage,
-        "files" => ds.filename,
-        "size" => size,
+        "files" => ds.filenames,
+        "types" => ds.types,
+        "sizes" => size,
         "timestamp" => ds.timestamp,
-        "retention_time" => ds.retention
+        "retention_time" => ds.retention,
+        "time_left" => time_left
     )
 end
 
@@ -115,11 +120,12 @@ function status()
     ds = read_datasets()
     
     count_ds = length(ds)
-    count_files = map(d -> length(d.filename), ds) |> sum
+    count_files = map(d -> length(d.filenames), ds) |> sum
     available_storage = diskstat(config["storage_dir"]).available
-    used_storage = map(d -> sum(d.size), ds) |> sum
+    used_storage = map(d -> sum(d.sizes), ds) |> sum
     total_storage = available_storage + used_storage
     used_relative = used_storage / total_storage * 100 |> round |> Int
+    ds_status = map(d -> status(d.id), ds)
 
     Dict(
         "count_datasets" => count_ds,
@@ -127,6 +133,7 @@ function status()
         "used_storage" => format_size(used_storage),
         "available_storage" => format_size( available_storage),
         "total_storage" => format_size(total_storage),
-        "used_relative" => "$used_relative %"
+        "used_relative" => "$used_relative %",
+        "datasets" => ds_status
     )
 end
