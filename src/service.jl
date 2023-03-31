@@ -42,22 +42,22 @@ function format_size(bytes::Int)::String
     if bytes < 1024
         size = "$bytes B"
     elseif bytes < 1024^2
-        bytes = round(bytes/1024, digits=2)
+        bytes = round(bytes/1024) |> Int
         size = "$bytes KiB"
     elseif bytes < 1024^3
-        bytes = round(bytes/1024^2, digits=2)
+        bytes = round(bytes/1024^2) |> Int
         size = "$bytes MiB"
     elseif bytes < 1024^4
-        bytes = round(bytes/1024^3, digits=2)
+        bytes = round(bytes/1024^3) |> Int
         size = "$bytes GiB"
     elseif bytes < 1024^5
-        bytes = round(bytes/1024^4, digits=2)
+        bytes = round(bytes/1024^4) |> Int
         size = "$bytes TiB"
     elseif bytes < 1024^6
-        bytes = round(bytes/1024^5, digits=2)
+        bytes = round(bytes/1024^5) |> Int
         size = "$bytes PiB"
     else
-        bytes = round(bytes/1024^6, digits=2)
+        bytes = round(bytes/1024^6) |> Int
         size = "$bytes EiB"
     end
 
@@ -108,7 +108,7 @@ function status(id::UUID)
         "stage" => ds.stage,
         "files" => ds.filenames,
         "types" => ds.types,
-        "sizes" => size,
+        "size_total" => size,
         "timestamp" => ds.timestamp,
         "retention_time" => ds.retention,
         "time_left" => time_left
@@ -117,15 +117,13 @@ end
 
 
 function status()
-    ds = read_datasets()
-    
+    ds = read_datasets()    
     count_ds = length(ds)
     count_files = map(d -> length(d.filenames), ds) |> sum
     available_storage = diskstat(config["storage_dir"]).available
     used_storage = map(d -> sum(d.sizes), ds) |> sum
     total_storage = available_storage + used_storage
     used_relative = used_storage / total_storage * 100 |> round |> Int
-    ds_status = map(d -> status(d.id), ds)
 
     Dict(
         "count_datasets" => count_ds,
@@ -133,7 +131,13 @@ function status()
         "used_storage" => format_size(used_storage),
         "available_storage" => format_size( available_storage),
         "total_storage" => format_size(total_storage),
-        "used_relative" => "$used_relative %",
-        "datasets" => ds_status
+        "used_relative" => "$used_relative %"
     )
+end
+
+
+function available_datasets()
+    ds = read_datasets()
+    ds_status = map(d -> status(d.id), ds)
+    filter(d -> d["stage"] == available, ds_status)
 end

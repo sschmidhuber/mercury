@@ -40,7 +40,12 @@ end
 end
 
 
-@get "/datasets/status" function(req)
+@get "/datasets" function(req)
+    available_datasets()
+end
+
+
+@get "/status" function(req)
     status()
 end
 
