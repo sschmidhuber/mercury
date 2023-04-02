@@ -20,10 +20,16 @@ include("api.jl")
 function main()
     # initialize flat file DB
     initdb()
-    correct_inconsistencies()
 
     # start webserver
-    serveparallel(host=config["network"]["ip"], port=config["network"]["port"])
+    host=config["network"]["ip"]
+    port=config["network"]["port"]
+
+    if Threads.nthreads() == 1
+        serve(host=host, port=port)
+    else
+        serveparallel(host=host, port=port)
+    end
 end
 
 if !isinteractive()

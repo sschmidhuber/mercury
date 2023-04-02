@@ -307,4 +307,6 @@ function initdb()
     finally
         unlock(dslock)
     end
+
+    correct_inconsistencies()
 end
