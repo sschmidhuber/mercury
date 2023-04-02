@@ -20,6 +20,7 @@ function process_dataset(id::UUID)
     # mock malware check
     sleep(1)
     ds.stage = scanned
+    ds.stagechange = now()
     update_dataset(ds)
 
     @info "check DataSet consistency (not implemented yet)"
@@ -179,4 +180,33 @@ function get_download_path(id::UUID)
     livepath = joinpath(config["storage_dir"], "live", string(id))
     filename = length(ds.filenames) == 1 ? ds.filenames[1] : ds.label * ".zip"
     return joinpath(livepath, filename)
+end
+
+
+"""
+    cleanup()
+
+Periodically delete datasets if retention time is exceeded.
+"""
+function cleanup()
+    while true
+        ts = now()
+        ds = read_datasets()
+
+        foreach(ds) do d
+            if d.stage == available
+                if d.timestamp + Hour(d.retention) < ts
+                    @info "delete $(d.label), ID: $(d.id)"
+                    delete_dataset(d.id)
+                end
+            elseif d.stage == deleted
+                if d.stagechange + Hour(config["retention"]["purge"]) < ts
+                    @info "purge $(d.label), ID: $(d.id)"
+                    delete_dataset(d.id, purge=true)
+                end
+            end
+        end
+
+        sleep(config["retention"]["interval"])
+    end
 end

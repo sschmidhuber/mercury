@@ -127,6 +127,7 @@ function promote_dataset(id::UUID)
         rm(tmppath, recursive=true)
 
         ds.stage = available
+        ds.stagechange = now()
         storeds()
     catch e
         showerror(stderr, e)
@@ -138,13 +139,11 @@ end
 
 
 """
-    delete_dataset(id::UUID)
+    delete_dataset(id::UUID; purge=false)
 
-Delete the DataSet corresponding to the given ID, do nothing if the id was not found.
+Delete the DataSet corresponding to the given ID, do nothing if the ID was not found.
 If purge = true is passed, the DB entry will not only be set to deleted, but the record will
-be deleted from the DB.
-
-In any case the files related to the DataSet will be deleted from disk.
+be deleted from the DB and corresponding files in "live" directory deleted.
 """
 function delete_dataset(id::UUID; purge=false)
     lock(dslock)
@@ -153,13 +152,13 @@ function delete_dataset(id::UUID; purge=false)
             tmppath = joinpath(config["storage_dir"], "tmp", string(id))
             rm(tmppath, force=true, recursive=true)
 
-            livepath = joinpath(config["storage_dir"], "live", string(id))
-            rm(livepath, force=true, recursive=true)
-
             if purge
+                livepath = joinpath(config["storage_dir"], "live", string(id))
+                rm(livepath, force=true, recursive=true)
                 delete!(datasets, id)
             else
                 datasets[id].stage = deleted
+                datasets[id].stagechange = now()
             end
             storeds()
         end

@@ -8,10 +8,17 @@ storage_dir = "../data/"
 ip = "0.0.0.0"
 port = 8000
 
-[retention] # retention times in hours
+[retention]
+# retention times in hours
 min = 0
 default = 48
 max = inf
+
+# after retention time a data set is soft deleted, purge time (in hours) after the soft delete, the data set gets hard deleted
+purge = 48
+
+# clean up interval in seconds
+interval = 300
 
 [limits] # in bytes
 filesize = inf

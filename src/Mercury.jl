@@ -21,6 +21,9 @@ function main()
     # initialize flat file DB
     initdb()
 
+    # start periodic cleanup
+    @async cleanup()
+
     # start webserver
     host=config["network"]["ip"]
     port=config["network"]["port"]
