@@ -5,6 +5,12 @@
     redirect("web/index.html")
 end
 
+
+@get "/status" function(req)
+    status()
+end
+
+
 @post "/datasets" function(req)
     contenttype = HTTP.headers(req, "Content-Type")
     if isempty(contenttype) || !contains(contenttype[1], "multipart/form-data")
@@ -36,7 +42,7 @@ end
     add_dataset(id, label, filenames, types, sizes, iobuffers)
     @async process_dataset($id)
 
-    return ("id" => id)
+    return HTTP.Response(201, Dict("id" => id) |> JSON.json)
 end
 
 
@@ -45,8 +51,23 @@ end
 end
 
 
-@get "/status" function(req)
-    status()
+@get "/datasets/{id}" function(req, id)
+    local dsid
+    try
+        dsid = UUID(id)
+    catch
+        return HTTP.Response(422, Dict("error" => "invalid request", "detail" => "$id is not a valid UUID") |> JSON.json)
+    end
+
+    # check authorization
+    # to be implemented when introducinf protected / encrypted data sets and external access
+    
+    path = get_download_path(dsid)
+    if isnothing(path)
+        return HTTP.Response(404, Dict("error" => "resource not found", "detail" => "there is no data set available with ID: $id") |> JSON.json)
+    end
+    data = Mmap.mmap(open(path), Array{UInt8,1})
+    return HTTP.Response(200, data)
 end
 
 

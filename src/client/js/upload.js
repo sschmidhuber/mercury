@@ -65,7 +65,7 @@ async function upload(event) {
     })
     .then((data) => data)
     
-    if (resCode == 200) {
+    if (resCode == 201) {
         successStatus(uploadDataset)
         inprogressStatus(checkMalware)
         infoPanel.textContent = "Data Set ID: " + resBody.id

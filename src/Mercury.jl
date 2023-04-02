@@ -7,7 +7,7 @@ module Mercury
 cd(@__DIR__)
 using Pkg
 Pkg.activate("..")
-using Dates, UUIDs, MIMEs, TOML, Chain, JSON, HTTP, Oxygen
+using Dates, UUIDs, MIMEs, TOML, Chain, JSON, HTTP, Oxygen, Mmap
 
 const config = TOML.parsefile("../config/config.toml")
 

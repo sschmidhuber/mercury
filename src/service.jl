@@ -93,6 +93,11 @@ function format_retention(timestamp::DateTime)::String
 end
 
 
+"""
+    status(id::UUID)
+
+Return status of the data set associated to the given ID.
+"""
 function status(id::UUID)
     ds = read_dataset(id)
     if isnothing(ds)
@@ -100,6 +105,11 @@ function status(id::UUID)
     end
     size = format_size(ds.sizes |> sum)
     time_left = format_retention(ds.timestamp + Hour(ds.retention))
+    download_extension = if ds.filenames |> length > 1
+        ".zip"
+    else
+        extension_from_mime(ds.types[1])
+    end
 
     Dict(
         "id" => id,
@@ -108,6 +118,7 @@ function status(id::UUID)
         "stage" => ds.stage,
         "files" => ds.filenames,
         "types" => ds.types,
+        "download_extension" => download_extension,
         "size_total" => size,
         "timestamp" => ds.timestamp,
         "retention_time" => ds.retention,
@@ -116,6 +127,11 @@ function status(id::UUID)
 end
 
 
+"""
+    status()
+
+Return the system status.
+"""
 function status()
     ds = read_datasets()    
     count_ds = length(ds)
@@ -136,8 +152,31 @@ function status()
 end
 
 
+"""
+    available_datasets()
+
+Return status of all available datasets.
+"""
 function available_datasets()
     ds = read_datasets()
     ds_status = map(d -> status(d.id), ds)
     filter(d -> d["stage"] == available, ds_status)
+end
+
+
+"""
+    download_path(id::UUID)
+
+Return the path of the correspoonding download artefact associated to the given ID.
+Return nothing, if there is no data set corresponding to the given ID.
+"""
+function get_download_path(id::UUID)
+    ds = read_dataset(id)
+    if isnothing(ds) || ds.stage != available
+        return nothing
+    end
+
+    livepath = joinpath(config["storage_dir"], "live", string(id))
+    filename = length(ds.filenames) == 1 ? ds.filenames[1] : ds.label * ".zip"
+    return joinpath(livepath, filename)
 end

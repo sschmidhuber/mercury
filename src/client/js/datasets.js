@@ -9,7 +9,7 @@ loadDatasets()
 
 
 // functions
-function addDataSet(id, label, timeLeft, size) {
+function addDataSet(id, label, timeLeft, size, download_extension) {
     wrapper = document.createElement('div')
     wrapper.innerHTML = [
         '<div>',
@@ -19,7 +19,7 @@ function addDataSet(id, label, timeLeft, size) {
         `           <h5 class="card-title">${label}</h5>`,
         `           <p class="card-text">Retention time:\t <strong>${timeLeft}</strong>`,
         `           <p class="card-text">Total file size:\t <strong>${size}</strong></p>`,
-        `           <a class="btn btn-primary" href="/datasets/${id}/status">Download</a>`,
+        `           <a class="btn btn-primary" href="/datasets/${id}" download="${label}${download_extension}">Download</a>`,
         '       </div>',
         '   </div>',
         '   </div>',
@@ -40,7 +40,7 @@ async function loadDatasets() {
     
     if (resCode == 200) {
         resBody.forEach(e => {
-            addDataSet(e.id, e.label, e.time_left, e.size_total)
+            addDataSet(e.id, e.label, e.time_left, e.size_total, e.download_extension)
         });
     } else {
         // add error handling
