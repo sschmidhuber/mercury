@@ -52,9 +52,10 @@ mutable struct DataSet
     public::Bool
     types::Vector{MIME}
     sizes::Vector{Int}
+    downloads::Int
 end
 
-DataSet(id, label, tags, filenames, retention, types, sizes) = DataSet(id, label, tags, filenames, initial, now(), now(), retention, false, false, false, types, sizes)
+DataSet(id, label, tags, filenames, retention, types, sizes) = DataSet(id, label, tags, filenames, initial, now(), now(), retention, false, false, false, types, sizes, 0)
 
 function isequal(x::DataSet, y::DataSet)
     x.id == y.id &&
@@ -69,7 +70,8 @@ function isequal(x::DataSet, y::DataSet)
     x.protected == y.protected &&
     x.public == y.public &&
     x.types == y.types &&
-    x.sizes == y.sizes
+    x.sizes == y.sizes &&
+    x.downloads == y.downloads
 end
 
 function dataset(dict::Dict)
@@ -86,7 +88,8 @@ function dataset(dict::Dict)
         dict["protected"],
         dict["public"],
         MIME.(dict["types"]),
-        dict["sizes"]
+        dict["sizes"],
+        dict["downloads"]
     )
 end
 

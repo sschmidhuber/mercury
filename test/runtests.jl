@@ -82,7 +82,7 @@ end;
             sleep(1)
         end
 
-        HTTP.request("GET", "http://127.0.0.1:8123/datasets/status")
+        HTTP.request("GET", "http://127.0.0.1:8123/status")
     finally
         Mercury.terminate()
     end

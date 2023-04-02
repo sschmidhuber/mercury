@@ -2,8 +2,9 @@
   <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1" name="viewport"/>
-    <meta content="" name="description"/>
-    <meta content="Stefan Schmidhuber (stefan.schmidhuber@gmx.at)" name="author"/>
+    <meta name="description" content="Mercury, a simple file exchange server">
+    <meta name="author" content="Stefan Schmidhuber (stefan.schmidhuber@gmx.at)">
+    <link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
     <title>
       Mercury
     </title>
@@ -72,11 +73,11 @@
           width: 1.5rem;
           height: 1.5rem;
         }
-      </style>
+          </style>
   </head>
   <body>
     <main>
-      <nav aria-label="Fourth navbar example" class="navbar navbar-expand-md navbar-dark bg-dark" id="replace-nav">
+      <nav aria-label="Fourth navbar example" class="navbar fixed-top navbar-expand-md navbar-dark bg-dark" id="replace-nav">
         <div class="container-fluid">
           <a class="navbar-brand" href="index.html">
             Mercury
@@ -93,7 +94,7 @@
               </li>
               <li class="nav-item">
                 <a aria-current="page" class="nav-link" href="upload.html" id="upload">
-                  Upload files
+                  Upload
                 </a>
               </li>
             </ul>
@@ -102,58 +103,56 @@
       </nav>
       <div class="mt-4">
         <div class="bg-light p-5 rounded">
-          <div id="newUpload" class="col-sm-8 mx-auto">
+          <div class="col-sm-8 mx-auto" id="newUpload">
             <h1>
               Upload
             </h1>
             <div id="alertPlaceholder"></div>
-            <!--
-              TODO:
-
-              implement chunked file upload to support large files: https://stackoverflow.com/questions/50121917/split-an-uploaded-file-into-multiple-chunks-using-javascript
-            -->
-            <!--form action="/dataset" method="post" enctype="multipart/form-data"-->
             <form>
               <div>
                 <div class="mb-3">
-                  <label for="label" class="form-label">Label</label>
-                  <input type="text" id="label" name="label"/>
+                  <label class="form-label" for="label">
+                    Label
+                  </label>
+                  <input id="label" name="label" type="text"/>
                 </div>
                 <div class="mb-3">
-                  <label for="fileSelector" class="form-label">Choose a file</label>
-                  <input id="fileSelector" class="form-control" type="file" name="myFile" multiple/>
-                </div>                
+                  <label class="form-label" for="fileSelector">
+                    Choose a file
+                  </label>
+                  <input class="form-control" id="fileSelector" multiple="" name="myFile" type="file"/>
+                </div>
               </div>
               <div>
-                <button id="uploadButton" class="btn btn-primary">Upload</button>
+                <button class="btn btn-primary" id="uploadButton">
+                  Upload
+                </button>
               </div>
             </form>
-            
           </div>
-          <div id="uploadStatus" class="col-sm-8 mx-auto" hidden>
+          <div class="col-sm-8 mx-auto" hidden="" id="uploadStatus">
             <h1>
               Create new data set
             </h1>
-            <div id="uploadDataset" class="alert alert-primary" role="alert">
+            <div class="alert alert-primary" id="uploadDataset" role="alert">
               <div class="d-flex align-items-center">
                 upload data to server
-                <div class="spinner-border ms-auto" role="status" aria-hidden="true"></div>
+                <div aria-hidden="true" class="spinner-border ms-auto" role="status"></div>
               </div>
             </div>
-            <div id="checkMalware" class="alert alert-secondary" role="alert">
+            <div class="alert alert-secondary" id="checkMalware" role="alert">
               <div class="d-flex align-items-center">
                 check for malware
-                <div class="spinner-border ms-auto" role="status" aria-hidden="true" hidden></div>
+                <div aria-hidden="true" class="spinner-border ms-auto" hidden="" role="status"></div>
               </div>
             </div>
-            <div id="prepareDataset" class="alert alert-secondary" role="alert">
+            <div class="alert alert-secondary" id="prepareDataset" role="alert">
               <div class="d-flex align-items-center">
                 prepare data for download
-                <div class="spinner-border ms-auto" role="status" aria-hidden="true" hidden></div>
+                <div aria-hidden="true" class="spinner-border ms-auto" hidden="" role="status"></div>
               </div>
             </div>
-                  
-            <p id="infoPanel"></p>            
+            <p id="infoPanel"></p>
           </div>
         </div>
       </div>

@@ -123,7 +123,8 @@ function status(id::UUID)
         "size_total" => size,
         "timestamp" => ds.timestamp,
         "retention_time" => ds.retention,
-        "time_left" => time_left
+        "time_left" => time_left,
+        "downloads" => ds.downloads
     )
 end
 
@@ -179,6 +180,10 @@ function get_download_path(id::UUID)
 
     livepath = joinpath(config["storage_dir"], "live", string(id))
     filename = length(ds.filenames) == 1 ? ds.filenames[1] : ds.label * ".zip"
+
+    ds.downloads += 1
+    update_dataset(ds)
+
     return joinpath(livepath, filename)
 end
 
