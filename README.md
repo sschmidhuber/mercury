@@ -36,6 +36,7 @@ To fulfill the set goals following features should be implementd:
 * Checksum to verify file identity
 * Access to datasets from public internet (IP restricted)
 * Upload links to allow uploads from public internet
+* Mutable data sets, for multiple users to add / remove data to same data set
 
 # Architecture
 

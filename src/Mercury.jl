@@ -18,6 +18,11 @@ include("service.jl")
 include("api.jl")
 
 function main()
+    # check config
+    if config["skip_malware_check"] == true
+        @warn "malware protection is disabled"
+    end
+
     # initialize flat file DB
     initdb()
 

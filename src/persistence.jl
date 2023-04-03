@@ -139,22 +139,29 @@ end
 
 
 """
-    delete_dataset(id::UUID; purge=false)
+    delete_dataset(id::UUID; hard=false, dbrecord=false)
 
 Delete the DataSet corresponding to the given ID, do nothing if the ID was not found.
-If purge = true is passed, the DB entry will not only be set to deleted, but the record will
-be deleted from the DB and corresponding files in "live" directory deleted.
+If hard = true, a hard delete will be performed, deleting all files permanently.
+If dbrecord = true, the database record of the dataset itself will be deleted from DB.
+
+If dbrecord = true and hard = false are set a ErrorException is thrown, since this
+would result in an inconsistent system state.
 """
-function delete_dataset(id::UUID; purge=false)
+function delete_dataset(id::UUID; hard=false, dbrecord=false)
+    if dbrecord && !hard
+        throw(ErrorException("Deletion of the DB record is only allowed in combination with a hard delete."))
+    end
     lock(dslock)
     try
         if haskey(datasets, id)
-            tmppath = joinpath(config["storage_dir"], "tmp", string(id))
-            rm(tmppath, force=true, recursive=true)
-
-            if purge
+            if hard
+                tmppath = joinpath(config["storage_dir"], "tmp", string(id))
+                rm(tmppath, force=true, recursive=true)
                 livepath = joinpath(config["storage_dir"], "live", string(id))
                 rm(livepath, force=true, recursive=true)
+            end
+            if dbrecord
                 delete!(datasets, id)
             else
                 datasets[id].stage = deleted

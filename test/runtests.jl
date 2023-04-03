@@ -36,7 +36,7 @@ using Test, UUIDs, HTTP, JSON
     #### here is a bug to fix, deleted state doesn't get written to DB
     # @show Mercury.read_dataset(ds1.id)
 
-    Mercury.delete_dataset(ds1.id, purge=true)
+    Mercury.delete_dataset(ds1.id, hard=true, dbrecord=true)
     @test dscount == Mercury.read_datasets() |> length
     @test Mercury.read_dataset(ds1.id) === nothing
     @test_throws DomainError Mercury.update_dataset(ds1)
@@ -79,7 +79,7 @@ end;
             res = HTTP.request("GET", "http://127.0.0.1:8123/datasets/$id2/status")
             res = res.body |> String |> JSON.parse
             @info "$(res["label"]) stage: $(res["stage"])"
-            sleep(1)
+            sleep(6)
         end
 
         HTTP.request("GET", "http://127.0.0.1:8123/status")

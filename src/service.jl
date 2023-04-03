@@ -15,22 +15,51 @@ end
 Process a newly uploaded dataset.
 """
 function process_dataset(id::UUID)
-    @warn "malware check (not implemented yet, this is just mocked)"
-    ds = read_dataset(id)
-    # mock malware check
-    sleep(1)
-    ds.stage = scanned
-    ds.stagechange = now()
-    update_dataset(ds)
-
-    @info "check DataSet consistency (not implemented yet)"
-    # availability of all files in expected size and type
-
-    @info "optimize storage (not implemented yet)"
-    
-    @info "prepare for download"
-    promote_dataset(id)
+    if malwarescan(id)
+        promote_dataset(id)
+    end
 end
+
+
+"""
+    malwarescan(id::UUID)
+
+Returns true, if scan was successful (no malware found) or false if test failed or malware was detected.
+In case malware was found, the data will be deleted immediately.
+"""
+function malwarescan(id::UUID)
+    try
+        ds = read_dataset(id)
+        if isnothing(ds)
+            @warn "no files found corresponding to ID: $id"
+            return false
+        end
+        if config["skip_malware_check"] == true
+            @warn "skip malware check for: $id"
+            ds.stage = scanned
+            ds.stagechange = now()
+            update_dataset(ds)
+            return true
+        else
+            dir = joinpath(config["storage_dir"], "tmp", string(id))
+            try
+                run(`clamscan -ri --no-summary $dir`)
+                ds.stage = scanned
+                ds.stagechange = now()
+                update_dataset(ds)
+                return true
+            catch _
+                @warn "malware check failed for: $id"
+                delete_dataset(id, hard = true)
+                return false
+            end
+        end
+    catch _
+        @warn "malware check failed"
+        return false
+    end        
+end
+
 
 """
     format_size(bytes::Int)::String
@@ -206,12 +235,16 @@ function cleanup()
                 end
             elseif d.stage == deleted
                 if d.stagechange + Hour(config["retention"]["purge"]) < ts
-                    @info "purge $(d.label), ID: $(d.id)"
-                    delete_dataset(d.id, purge=true)
+                    @info "permanently delete $(d.label), ID: $(d.id)"
+                    delete_dataset(d.id, hard=true, dbrecord=true)
+                end
+            elseif d.stage == initial || d.stage == scanned
+                if d.timestamp + Day(1) < ts
+                    @info "remove from tmp layer: $(d.label), ID: $(d.id)"
+                    delete_dataset(d.id, hard=true)
                 end
             end
         end
-
         sleep(config["retention"]["interval"])
     end
 end
