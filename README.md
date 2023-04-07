@@ -23,10 +23,12 @@ To fulfill the set goals following features should be implementd:
 * Malware check on file upload
 * Optional password protection
 * File and data set size limits
+* Filtering by name, type, tag
 
 # Ideas
 
 * Display download links as QR codes to share files on mobile devices
+* Configureable tag constraints
 * Support large files (> 2GB) by automated file splitting on the client side
 * Timed availability of uploaded files, so the file becomes available only at a previously specified date and time
 * Maximum number of wrong password attempts on password protected files
@@ -37,6 +39,8 @@ To fulfill the set goals following features should be implementd:
 * Access to datasets from public internet (IP restricted)
 * Upload links to allow uploads from public internet
 * Mutable data sets, for multiple users to add / remove data to same data set
+* Delete option
+* Optional account
 
 # Architecture
 

@@ -197,16 +197,7 @@ function checkds(ds::DataSet)
     tmppath = joinpath(config["storage_dir"], "tmp", string(ds.id))
     livepath = joinpath(config["storage_dir"], "live", string(ds.id))
 
-    if ds.stage == deleted
-        if ispath(tmppath)
-            @warn "$(ds.label) - $(ds.stage): inconsistend data found"
-            rm(tmppath, recursive=true)
-        end
-        if ispath(livepath)
-            @warn "$(ds.label) - $(ds.stage): inconsistend data found"
-            rm(livepath, recursive=true)
-        end
-    elseif ds.stage == available
+    if ds.stage == available
         if ispath(tmppath)
             @warn "$(ds.label) - $(ds.stage): inconsistend data found"
             rm(tmppath, recursive=true)
@@ -241,8 +232,8 @@ function checkstorage()
     foreach(readdir(tmppath)) do id
         if haskey(datasets, UUID(id))
             ds = datasets[UUID(id)]
-            if !(ds.stage == initial || ds.stage == scanned)
-                @warn "$(ds.label) - $(ds.stage): inconsistend DB record found"
+            if ds.stage == available
+                @warn "$(ds.label) - $(ds.stage): inconsistent DB record found"
                 removeds(ds.id)
             end
         else
@@ -254,7 +245,7 @@ function checkstorage()
     foreach(readdir(livepath)) do id
         if haskey(datasets, UUID(id))
             ds = datasets[UUID(id)]
-            if !(ds.stage == available || ds.stage == scanned)
+            if ds.stage == initial
                 @warn "$(ds.label) - $(ds.stage): inconsistend DB record found"
                 removeds(ds.id)
             end
