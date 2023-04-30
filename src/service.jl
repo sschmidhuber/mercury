@@ -159,16 +159,43 @@ end
 
 
 """
+    count_ds()
+
+Return the number of available data sets.
+"""
+function count_ds()
+    ds = read_datasets()
+    filter(x -> x.stage == available, ds) |> length
+end
+
+
+"""
+    available_storage()
+
+Return available storage in bytes.
+"""
+function available_storage()
+    ds = read_datasets()
+    used_storage = map(d -> sum(d.sizes), ds) |> sum
+    min(diskstat(config["storage_dir"]).available, config["limits"]["storage"] - used_storage)
+end
+
+
+"""
     status()
 
-Return the system status.
+Return system status.
 """
 function status()
     ds = read_datasets()    
-    count_ds = length(ds)
-    count_files = map(d -> length(d.filenames), ds) |> sum
-    available_storage = diskstat(config["storage_dir"]).available
+    count_ds = filter(x -> x.stage == available, ds) |> length
+    count_files = @chain ds begin
+        filter(x -> x.stage == available, _)
+        map(d -> length(d.filenames), _)
+        sum(_)
+    end
     used_storage = map(d -> sum(d.sizes), ds) |> sum
+    available_storage = min(diskstat(config["storage_dir"]).available, config["limits"]["storage"] - used_storage)
     total_storage = available_storage + used_storage
     used_relative = used_storage / total_storage * 100 |> round |> Int
 
@@ -176,9 +203,21 @@ function status()
         "count_datasets" => count_ds,
         "count_files" => count_files,
         "used_storage" => format_size(used_storage),
-        "available_storage" => format_size( available_storage),
+        "available_storage" => format_size(available_storage),
         "total_storage" => format_size(total_storage),
         "used_relative" => "$used_relative %"
+    )
+end
+
+
+function limits()
+    Dict(
+        "filesize" => config["limits"]["filesize"],
+        "filesize_pretty" => config["limits"]["filesize"] |> format_size,
+        "filenumber_per_dataset" => config["limits"]["filenumber_per_dataset"],
+        "datasetsize" => config["limits"]["datasetsize"],
+        "datasetsize_pretty" => config["limits"]["datasetsize"] |> format_size,
+        "datasetnumber" => config["limits"]["datasetnumber"]
     )
 end
 

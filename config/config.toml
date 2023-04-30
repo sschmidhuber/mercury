@@ -21,6 +21,11 @@ purge = 48
 # clean up interval in seconds
 interval = 300
 
-[limits] # in bytes
-filesize = inf
-storagesize = inf
+[limits]
+# in bytes
+# put "inf" for infinite
+filesize = 838860800
+filenumber_per_dataset = 1000000
+datasetsize = 838860800
+datasetnumber = 1000000
+storage = 20000000000

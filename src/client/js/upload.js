@@ -67,72 +67,11 @@ async function upload(event) {
     .then((data) => data)
     
     if (resCode == 201) {
-        //successStatus(uploadDataset)
-        //inprogressStatus(checkMalware)
-        infoPanel.textContent = "Data Set ID: " + resBody.id
+        infoPanel.innerHTML = "<p>Upload successful, new Data Set ID: <b>" + resBody.id + "</b></p>"
         uploadStatusElement.setAttribute("state", "uploaded");
         uploadStatusElement.setAttribute("dataSetID", resBody.id);
-
-        /*dsStage = "initial"
-        updateIntervalID = setInterval(() => {
-            updateStatus(resBody.id)
-        }, 1000);*/
     } else {
-        // TODO: error handling
-        failedStatus(uploadDataset)
-        infoPanel.textContent = "Upload failed: " + resBody.error
+        uploadStatusElement.setAttribute("state", "failed");
+        uploadStatusElement.setAttribute("error", resBody.detail)
     }
 }
-
-/*async function updateStatus(id) {
-    resCode = null
-    resBody = await fetch("/datasets/" + id + "/status", {method: "GET"})
-    .then((response) => {
-        resCode = response.status
-        return response.json()
-    })
-    .then((data) => data)
-    
-    if (resCode == 200) {
-        if (resBody.stage != dsStage) {
-            switch (resBody.stage) {
-                case "scanned":
-                    successStatus(checkMalware)
-                    inprogressStatus(prepareDataset)
-                    break;
-                case "available":
-                    successStatus(checkMalware)
-                    successStatus(prepareDataset)
-                    clearInterval(updateIntervalID)
-                    // show link and DataSet preview
-                    break;
-                default:
-                    // add error handling
-                    break;
-            }
-            dsStage = resBody.stage
-        }
-    } else {
-        // add error handling
-        infoPanel.textContent = "Upload failed: " + resBody.error
-    }
-}
-
-// sets a step element (uploadDataset, malwareCheck or prepareDataset) to success
-function successStatus(step) {
-    step.childNodes[1].children[0].hidden = true
-    step.classList.remove("alert-primary")
-    step.classList.add("alert-success")
-}
-
-function failedStatus(step) {
-    step.childNodes[1].children[0].hidden = true
-    step.classList.remove("alert-primary")
-    step.classList.add("alert-danger")    
-}
-
-function inprogressStatus(step) {
-    step.childNodes[1].children[0].hidden = false
-    step.classList.remove("alert-secondary")
-    step.classList.add("alert-primary")      
-}*/

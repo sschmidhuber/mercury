@@ -19,8 +19,8 @@ function create_dataset(ds::DataSet, iobuffers)
 
     try
         for i in eachindex(iobuffers)
-            open(joinpath(path, ds.filenames[i]),"w") do p
-                write(p, iobuffers[i])
+            open(joinpath(path, ds.filenames[i]),"w") do file
+                write(file, iobuffers[i])
                 close(iobuffers[i])
             end
         end
@@ -99,6 +99,11 @@ function update_dataset(ds::DataSet)
 end
 
 
+"""
+    promote_dataset(id::UUID)
+
+Prepare a scanned data set for download and move from "tmp" to "live" storage layer.
+"""
 function promote_dataset(id::UUID)
     local ds
     if haskey(datasets, id)

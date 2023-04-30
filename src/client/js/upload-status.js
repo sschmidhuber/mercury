@@ -1,9 +1,11 @@
-import {LitElement, html} from 'https://cdn.jsdelivr.net/gh/lit/dist@2/core/lit-core.min.js';
+import {html} from 'https://cdn.jsdelivr.net/gh/lit/dist@2/core/lit-core.min.js';
+import {BootstrapElement} from '../deps/BootstrapElement.js';
 
-class UploadStatus extends LitElement {
+class UploadStatus extends BootstrapElement {
   static properties = {
       state: {},
       dataSetID: {},
+      error: {},
       _message: {state: true},
       _alertType: {state: true},
       _in_progress: {state: true},
@@ -28,8 +30,6 @@ class UploadStatus extends LitElement {
         return response.json()
     })
     .then((data) => data)
-
-    console.log(resBody.stage);
     
     if (resCode == 200) {
         if (resBody.stage != this._dsStage) {
@@ -38,7 +38,7 @@ class UploadStatus extends LitElement {
                     this._message = "Prepare data set for download ..."
                     break;
                 case "available":
-                    this._message = "New data set successfully created"
+                    this._message = "New data set successfully created."
                     this._alertType = "alert-success"
                     this._in_progress = false
                     clearInterval(this._updateIntervalID)
@@ -46,11 +46,11 @@ class UploadStatus extends LitElement {
                     break;
                 case "deleted":
                   if (this._dsStage == "initial") {
-                    this._message = "Malware detected! The data set was deleted"
+                    this._message = "Malware detected! The data set was deleted."
                     this._alertType = "alert-danger"
                     this._in_progress = false
                   } else {
-                    this._message = "Something went wrong, the data set was deleted"
+                    this._message = "Something went wrong, the data set was deleted."
                     this._alertType = "alert-danger"
                     this._in_progress = false
                   }
@@ -58,7 +58,7 @@ class UploadStatus extends LitElement {
                   break;
                 default:
                   this._alertType = "alert-danger"
-                  this._message = "Something went wrong, unknown state"
+                  this._message = "Something went wrong, unknown state."
                   this._in_progress = false
                   clearInterval(this._updateIntervalID)
                   break;
@@ -75,6 +75,11 @@ class UploadStatus extends LitElement {
 
 
   willUpdate() {
+    if (this.state == "failed") {
+      this._message = this.error
+      this._in_progress = false
+      this._alertType = "alert-warning"
+    }
     if (this.state == "uploaded" && this._dsStage == null) {
       this._message = "Check data for malware ..."
       this._dsStage = "initial"
@@ -84,9 +89,6 @@ class UploadStatus extends LitElement {
     }
   }
 
-  createRenderRoot() {
-    return this;
-  }
 
   render() {
       return html`

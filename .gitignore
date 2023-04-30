@@ -26,4 +26,8 @@ Manifest.toml
 # DrawIO backup files
 .$*
 
+# fronte-end artifacts
+deps/
+
+# data directory
 data/
