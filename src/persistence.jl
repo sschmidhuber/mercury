@@ -19,6 +19,10 @@ function create_dataset(ds::DataSet, iobuffers)
 
     try
         for i in eachindex(iobuffers)
+            dir = dirname(ds.filenames[i])
+            if dir != "" && !isdir(joinpath(path, dir))
+                mkpath(joinpath(path, dir))
+            end
             open(joinpath(path, ds.filenames[i]),"w") do file
                 write(file, iobuffers[i])
                 close(iobuffers[i])

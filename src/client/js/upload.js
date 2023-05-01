@@ -4,6 +4,8 @@ const uploadLink = document.querySelector("#upload")
 const newUpload = document.querySelector("#newUpload")
 const alertPlaceholder = document.querySelector("#alertPlaceholder")
 const label = document.querySelector("#label")
+const directoryCheckbox = document.querySelector("#directoryCheckbox")
+const fileSelectorLabel = document.querySelector("#fileSelectorLabel")
 const fileSelector = document.querySelector("#fileSelector")
 const uploadButton = document.querySelector("#uploadButton")
  
@@ -32,8 +34,19 @@ const alert = (message, type) => {
 
 // listeners
 uploadButton.addEventListener("click", upload)
+directoryCheckbox.addEventListener("click", directoryMode)
 
 //functions
+function directoryMode(event) {
+    if (directoryCheckbox.checked == true) {
+        fileSelectorLabel.textContent = "Choose a directory"
+        fileSelector.setAttribute("webkitdirectory", "")
+    } else {
+        fileSelectorLabel.textContent = "Choose a file"
+        fileSelector.removeAttribute("webkitdirectory")
+    }
+}
+
 async function upload(event) {
     event.preventDefault()
     oldAlert = document.querySelector("#newUpload .alert")
@@ -62,7 +75,11 @@ async function upload(event) {
     resBody = await fetch('/datasets', {method: "POST", body: formData})
     .then((response) => {
         resCode = response.status
-        return response.json()
+        if (resCode != 500) {
+            return response.json()
+        } else {
+            null
+        }
     })
     .then((data) => data)
     
@@ -70,6 +87,9 @@ async function upload(event) {
         infoPanel.innerHTML = "<p>Upload successful, new Data Set ID: <b>" + resBody.id + "</b></p>"
         uploadStatusElement.setAttribute("state", "uploaded");
         uploadStatusElement.setAttribute("dataSetID", resBody.id);
+    } else if (resCode == 500) {
+        uploadStatusElement.setAttribute("state", "failed");
+        uploadStatusElement.setAttribute("error", "Failed to process file upload.")       
     } else {
         uploadStatusElement.setAttribute("state", "failed");
         uploadStatusElement.setAttribute("error", resBody.detail)

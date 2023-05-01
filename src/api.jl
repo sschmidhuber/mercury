@@ -1,4 +1,5 @@
-@dynamicfiles "client" "web"
+#@dynamicfiles "client" "web"
+dynamicfiles("client", "web")
 
 
 @get "/" function()
@@ -101,7 +102,6 @@ end
     end
     data = Mmap.mmap(open(path), Array{UInt8,1})
     props = properties(dsid)
-    @show props
     headers = [
         "Transfer-Encoding" => "chunked",
         "Content-Disposition" => "attachment; filename=\"$(props["label"])\"",

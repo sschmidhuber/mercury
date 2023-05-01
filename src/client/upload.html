@@ -108,15 +108,15 @@
             <form>
               <div>
                 <div class="mb-3">
-                  <label class="form-label" for="label">
-                    Label
-                  </label>
+                  <label class="form-label" for="label">Label</label>
                   <input id="label" name="label" type="text"/>
                 </div>
                 <div class="mb-3">
-                  <label class="form-label" for="fileSelector">
-                    Choose a file
-                  </label>
+                  <input class="form-check-input" id="directoryCheckbox" multiple="" type="checkbox"/>
+                  <label class="form-label" for="directoryCheckbox">Directory upload</label>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label" id="fileSelectorLabel" for="fileSelector">Choose a file</label>
                   <input class="form-control" id="fileSelector" multiple="" name="myFile" type="file"/>
                 </div>
               </div>
