@@ -24,7 +24,7 @@ class UploadStatus extends BootstrapElement {
 
   async updateStatus(id) {
     resCode = null
-    resBody = await fetch("/datasets/" + id + "/status", {method: "GET"})
+    resBody = await fetch("/datasets/" + id + "/properties", {method: "GET"})
     .then((response) => {
         resCode = response.status
         return response.json()

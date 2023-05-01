@@ -4,7 +4,7 @@
 Add a new Data Set
 """
 function add_dataset(id::UUID, label::String, filenames::Vector{String}, types::Vector{T} where T <: MIME, sizes::Vector{Int}, iobuffers)
-    ds = DataSet(id, label, [], filenames, config["retention"]["default"], types, sizes)
+    ds = DataSet(id, strip(label), [], filenames, config["retention"]["default"], types, sizes)
     create_dataset(ds, iobuffers)
 end
 
@@ -124,11 +124,11 @@ end
 
 
 """
-    status(id::UUID)
+    properties(id::UUID)
 
-Return status of the data set associated to the given ID.
+Return properties of the data set associated to the given ID.
 """
-function status(id::UUID)
+function properties(id::UUID)
     ds = read_dataset(id)
     if isnothing(ds)
         return nothing
@@ -229,7 +229,7 @@ Return status of all available datasets.
 """
 function available_datasets()
     ds = read_datasets()
-    ds_status = map(d -> status(d.id), ds)
+    ds_status = map(d -> properties(d.id), ds)
     filter(d -> d["stage"] == available, ds_status)
 end
 

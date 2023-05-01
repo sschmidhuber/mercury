@@ -2,7 +2,21 @@
 
 module Mercury
 
-# https://xkcd.com/949/
+#=
+
+https://xkcd.com/949/
+
+TODOs:
+* directory support
+* display system status only after response
+* use dynamicfiles() function instead of @dynamicfiles macro
+* create storage init function (create tmp/live directories)
+* sort datasets
+* create setup script (load fonrend and backend dependencies)
+* add settings to upload
+
+=#
+
 
 cd(@__DIR__)
 using Pkg

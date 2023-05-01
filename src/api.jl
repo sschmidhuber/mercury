@@ -100,17 +100,25 @@ end
         return HTTP.Response(404, Dict("error" => "resource not found", "detail" => "there is no data set available with ID: $id") |> JSON.json)
     end
     data = Mmap.mmap(open(path), Array{UInt8,1})
-    return HTTP.Response(200, data)
+    props = properties(dsid)
+    @show props
+    headers = [
+        "Transfer-Encoding" => "chunked",
+        "Content-Disposition" => "attachment; filename=\"$(props["label"])\"",
+        "Content-Type" => mime_from_extension(props["download_extension"]),
+        "Content-Lenght" => props["size_total"]
+    ]
+    return HTTP.Response(200, headers, data)
 end
 
 
-@get "/datasets/{id}/status" function(req, id::String)
+@get "/datasets/{id}/properties" function(req, id::String)
     try
         dsid = UUID(id)
     catch
         return HTTP.Response(422, Dict("error" => "invalid request", "detail" => "$id is not a valid UUID") |> JSON.json)
     end
-    res = status(UUID(id))
+    res = properties(UUID(id))
     if isnothing(res)
         return HTTP.Response(404, Dict("error" => "no DataSet with ID: $id found") |> JSON.json)
     end
