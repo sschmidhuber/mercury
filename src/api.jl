@@ -106,7 +106,7 @@ end
         "Transfer-Encoding" => "chunked",
         "Content-Disposition" => "attachment; filename=\"$(props["label"])\"",
         "Content-Type" => mime_from_extension(props["download_extension"]),
-        "Content-Lenght" => props["size_total"]
+        "Content-Length" => props["sizes"] |> sum
     ]
     return HTTP.Response(200, headers, data)
 end

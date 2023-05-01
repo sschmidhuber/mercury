@@ -7,7 +7,7 @@ module Mercury
 https://xkcd.com/949/
 
 TODOs:
-* directory support
+* protect against large uploads
 * display system status only after response
 * use dynamicfiles() function instead of @dynamicfiles macro
 * create storage init function (create tmp/live directories)

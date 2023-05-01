@@ -149,6 +149,7 @@ function properties(id::UUID)
         "files" => ds.filenames,
         "types" => ds.types,
         "download_extension" => download_extension,
+        "sizes" => ds.sizes,
         "size_total" => size,
         "timestamp" => ds.timestamp,
         "retention_time" => ds.retention,
