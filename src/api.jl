@@ -104,7 +104,7 @@ end
     props = properties(dsid)
     headers = [
         "Transfer-Encoding" => "chunked",
-        "Content-Disposition" => "attachment; filename=\"$(props["label"])\"",
+        "Content-Disposition" => "attachment; filename=\"$(props["label"])$(props["download_extension"])\"",
         "Content-Type" => mime_from_extension(props["download_extension"]),
         "Content-Length" => props["sizes"] |> sum
     ]
