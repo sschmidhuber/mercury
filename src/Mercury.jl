@@ -22,7 +22,7 @@ TODOs:
 cd(@__DIR__)
 using Pkg
 Pkg.activate("..")
-using Dates, UUIDs, MIMEs, TOML, Chain, JSON, HTTP, Oxygen, Mmap
+using Dates, UUIDs, MIMEs, TOML, Chain, JSON, HTTP, Oxygen, Mmap, LoggingExtras
 
 const config = TOML.parsefile("../config/config.toml")
 
@@ -33,6 +33,18 @@ include("service.jl")
 include("api.jl")
 
 function main()
+    # setup logging
+    if !isinteractive()
+        mkpath(dirname(config["logfile"]))
+        logfile = open(config["logfile"], "w")
+        dateformat = DateFormat("yyyy-mm-dd -- HH:MM:SS")
+        logger = FormatLogger(logfile) do logfile, args
+            println(logfile, args.level, " -- ", Dates.format(now(), dateformat), ": ", args.message, "  (", args._module, ":", args.line, ")")
+        end
+        logger = MinLevelLogger(logger, Logging.Info)
+        global_logger(logger)
+    end
+
     # check config
     if config["skip_malware_check"] == true
         @warn "malware protection is disabled"

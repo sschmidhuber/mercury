@@ -1,5 +1,5 @@
 #@dynamicfiles "client" "web"
-dynamicfiles("client", "web")
+staticfiles("client", "web")
 
 
 @get "/" function()

@@ -3,7 +3,8 @@
 # absolute path or relative to "Mercury.jl" parent directory
 db_dir = "../data/"
 storage_dir = "../data/"
-skip_malware_check = false
+logfile = "../data/mercury.log"
+skip_malware_check = true
 
 [network]
 ip = "0.0.0.0"
