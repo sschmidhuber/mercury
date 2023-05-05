@@ -135,11 +135,8 @@ function properties(id::UUID)
     end
     size = format_size(ds.sizes |> sum)
     time_left = format_retention(ds.timestamp + Hour(ds.retention))
-    download_extension = if ds.filenames |> length > 1
-        ".zip"
-    else
-        extension_from_mime(ds.types[1])
-    end
+    download_extension = length(ds.filenames) == 1 && dirname(ds.filenames[1]) == "" ? extension_from_mime(ds.types[1]) : ".zip"
+    download_filename = length(ds.filenames) == 1 && dirname(ds.filenames[1]) == "" ? ds.filenames[1] : ds.label * ".zip"
 
     Dict(
         "id" => id,
@@ -149,6 +146,7 @@ function properties(id::UUID)
         "files" => ds.filenames,
         "types" => ds.types,
         "download_extension" => download_extension,
+        "download_filename" => download_filename,
         "sizes" => ds.sizes,
         "size_total" => size,
         "timestamp" => ds.timestamp,
@@ -248,7 +246,7 @@ function get_download_path(id::UUID)
     end
 
     livepath = joinpath(config["storage_dir"], "live", string(id))
-    filename = length(ds.filenames) == 1 ? ds.filenames[1] : ds.label * ".zip"
+    filename = length(ds.filenames) == 1 && dirname(ds.filenames[1]) == "" ? ds.filenames[1] : ds.label * ".zip"
 
     ds.downloads += 1
     update_dataset(ds)

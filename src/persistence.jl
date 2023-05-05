@@ -124,7 +124,7 @@ function promote_dataset(id::UUID)
     livepath = joinpath(config["storage_dir"], "live", string(id))
     mkpath(livepath)
 
-    if ds.filenames |> length == 1
+    if length(ds.filenames) == 1 && dirname(ds.filenames[1]) == "" # check if single file and not a within a directory
         mv(joinpath(tmppath, ds.filenames[1]), joinpath(livepath, ds.filenames[1]))
     else
         run(Cmd(`zip -0 -q $(ds.label).zip $(ds.filenames)`, dir=tmppath))

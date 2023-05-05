@@ -7,14 +7,22 @@ module Mercury
 https://xkcd.com/949/
 
 TODOs:
-* log to file
 * protect against large uploads
-* display system status only after response
+
 * create storage init function (create tmp/live directories)
 * sort datasets
+* QR code
+* show dataset after upload
+* IP access restriction (congifure allowed subnets)
+* number of files, file types
+* icons / thumbnails
+* data set content details / file list
 * create setup script (load fonrend and backend dependencies)
 * add settings to upload
+* user info / welcome dialog
 * link sharing
+* search datasets
+* external access support
 
 =#
 

@@ -76,7 +76,7 @@ end;
 
         # get status
         for _ in 1:5
-            res = HTTP.request("GET", "http://127.0.0.1:8123/datasets/$id2/status")
+            res = HTTP.request("GET", "http://127.0.0.1:8123/datasets/$id2/properties")
             res = res.body |> String |> JSON.parse
             @info "$(res["label"]) stage: $(res["stage"])"
             sleep(6)

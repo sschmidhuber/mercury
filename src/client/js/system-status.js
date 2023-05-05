@@ -1,4 +1,4 @@
-import {html} from 'https://cdn.jsdelivr.net/gh/lit/dist@2/core/lit-core.min.js';
+import {html, css} from '../deps/lit-core.min.js';
 import {BootstrapElement} from '../deps/BootstrapElement.js';
 
 class SystemStatus extends BootstrapElement {
@@ -11,14 +11,28 @@ class SystemStatus extends BootstrapElement {
       _usedStorageRel: {state: true}
   }
 
+  /*static styles = [
+    BootstrapElement.styles,
+    css`
+    .large {
+      display: none;
+    }
+    @include media-breakpoint-up(sm) {
+      .large {
+        display: inline-block;
+      }
+    }
+    `
+  ]*/
+
   constructor() {
       super();
       this.updateStatus()
   }
 
   async updateStatus() {
-    resCode = null
-    resBody = await fetch("/status", {method: "GET"})
+    var resCode = null
+    var resBody = await fetch("/status", {method: "GET"})
     .then((response) => {
         resCode = response.status
         return response.json()
@@ -40,10 +54,10 @@ class SystemStatus extends BootstrapElement {
   render() {
       return html`
       <span>
-        <p style="display: inline-block; margin-right: 2em;">${this._datasets} ${this._datasets == 1 ? "dataset" : "datasets"}</p>
-        <p style="display: inline-block; margin-right: 2em;">${this._files} ${this._files == 1 ? "file" : "files"}</p>
-        <p style="display: inline-block; margin-right: 2em;">Total Storage: ${this._totalStorage} (${this._usedStorageRel} used)</p>
-        <p style="display: inline-block;">Free Storage: ${this._availableStorage}</p>
+        <p style="display: inline-block; margin-right: 2em;">${this._datasets} ${this._datasets == 1 ? "Data Set" : "Data Sets"}</p>
+        <p style="display: inline-block; margin-right: 2em;">${this._files} ${this._files == 1 ? "File" : "Files"}</p>
+        <p class="d-none d-lg-inline-block" style="margin-right: 2em;" title="Used storage includes not yet cleand up files.">Total Storage: ${this._totalStorage} (${this._usedStorageRel} used)</p>
+        <p class="d-none d-xl-inline-block">Free Storage: ${this._availableStorage}</p>
       </span>
       `
   }

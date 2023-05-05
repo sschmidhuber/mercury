@@ -1,5 +1,8 @@
-#@dynamicfiles "client" "web"
-staticfiles("client", "web")
+if isinteractive() # serve in dynamic mode for interactive sessions resp. during development
+    dynamicfiles("client", "web")
+else
+    staticfiles("client", "web")
+end
 
 
 @get "/" function()
@@ -104,7 +107,7 @@ end
     props = properties(dsid)
     headers = [
         "Transfer-Encoding" => "chunked",
-        "Content-Disposition" => "attachment; filename=\"$(props["label"])$(props["download_extension"])\"",
+        "Content-Disposition" => "attachment; filename=\"$(props["download_filename"])\"",
         "Content-Type" => mime_from_extension(props["download_extension"]),
         "Content-Length" => props["sizes"] |> sum
     ]

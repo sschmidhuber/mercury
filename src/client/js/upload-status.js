@@ -1,4 +1,4 @@
-import {html} from 'https://cdn.jsdelivr.net/gh/lit/dist@2/core/lit-core.min.js';
+import {html} from '../deps/lit-core.min.js';
 import {BootstrapElement} from '../deps/BootstrapElement.js';
 
 class UploadStatus extends BootstrapElement {
