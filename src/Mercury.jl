@@ -9,20 +9,21 @@ https://xkcd.com/949/
 TODOs:
 * protect against large uploads
 
-* create storage init function (create tmp/live directories)
-* sort datasets
-* QR code
-* show dataset after upload
 * IP access restriction (congifure allowed subnets)
-* number of files, file types
-* icons / thumbnails
-* data set content details / file list
-* create setup script (load fonrend and backend dependencies)
-* add settings to upload
-* user info / welcome dialog
-* link sharing
-* search datasets
 * external access support
+* sort datasets
+* link sharing
+* add settings to upload (retention time, visibility)
+* short dataset ID and copy dataset ID to clipboard
+* icons / thumbnails
+* search datasets
+* number of files, file types and more meta data of datasets
+* QR code
+* show dataset after upload, directly in upload page
+* data set content details / file list
+* user info / welcome dialog
+* create setup script (load fonrend and backend dependencies)
+* create storage init function (create tmp/live directories)
 
 =#
 
@@ -69,9 +70,17 @@ function main()
     port=config["network"]["port"]
 
     if Threads.nthreads() == 1
-        serve(host=host, port=port)
+        if config["disable_access_log"]
+            serve(host=host, port=port, access_log=nothing)
+        else
+            serve(host=host, port=port)
+        end
     else
-        serveparallel(host=host, port=port)
+        if config["disable_access_log"]
+            serveparallel(host=host, port=port, access_log=nothing)
+        else
+            serveparallel(host=host, port=port)
+        end        
     end
 end
 

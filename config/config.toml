@@ -4,7 +4,11 @@
 db_dir = "../data/"
 storage_dir = "../data/"
 logfile = "../data/mercury.log"
+
 skip_malware_check = true
+
+# disable access log for better performance
+disable_access_log = false
 
 [network]
 ip = "0.0.0.0"
