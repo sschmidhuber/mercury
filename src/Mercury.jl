@@ -9,8 +9,6 @@ https://xkcd.com/949/
 TODOs:
 * protect against large uploads
 
-* IP access restriction (congifure allowed subnets)
-* external access support
 * sort datasets
 * link sharing
 * add settings to upload (retention time, visibility)
@@ -18,9 +16,11 @@ TODOs:
 * icons / thumbnails
 * search datasets
 * number of files, file types and more meta data of datasets
+* external access support
 * QR code
 * show dataset after upload, directly in upload page
 * data set content details / file list
+* large dataset / file support
 * user info / welcome dialog
 * create setup script (load fonrend and backend dependencies)
 * create storage init function (create tmp/live directories)
@@ -31,7 +31,7 @@ TODOs:
 cd(@__DIR__)
 using Pkg
 Pkg.activate("..")
-using Dates, UUIDs, MIMEs, TOML, Chain, JSON, HTTP, Oxygen, Mmap, LoggingExtras
+using Dates, UUIDs, MIMEs, TOML, Chain, JSON, HTTP, Oxygen, Mmap, LoggingExtras, Sockets, IPNets
 
 const config = TOML.parsefile("../config/config.toml")
 
@@ -39,6 +39,7 @@ const config = TOML.parsefile("../config/config.toml")
 include("model.jl")
 include("persistence.jl")
 include("service.jl")
+include("middleware.jl")
 include("api.jl")
 
 function main()
@@ -68,18 +69,19 @@ function main()
     # start webserver
     host=config["network"]["ip"]
     port=config["network"]["port"]
+    middleware = [SubnetRestrictionMiddleware]
 
     if Threads.nthreads() == 1
         if config["disable_access_log"]
-            serve(host=host, port=port, access_log=nothing)
+            serve(middleware=middleware, host=host, port=port, access_log=nothing)
         else
-            serve(host=host, port=port)
+            serve(middleware=middleware, host=host, port=port)
         end
     else
         if config["disable_access_log"]
-            serveparallel(host=host, port=port, access_log=nothing)
+            serveparallel(middleware=middleware, host=host, port=port, access_log=nothing)
         else
-            serveparallel(host=host, port=port)
+            serveparallel(middleware=middleware, host=host, port=port)
         end        
     end
 end

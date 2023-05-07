@@ -8,11 +8,14 @@ logfile = "../data/mercury.log"
 skip_malware_check = true
 
 # disable access log for better performance
-disable_access_log = false
+disable_access_log = true
 
 [network]
 ip = "0.0.0.0"
 port = 8000
+
+# access from IPs outside below subnets will be blocked
+subnets = ["127.0.0.0/8", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
 
 [retention]
 # retention times in hours
