@@ -1,9 +1,18 @@
+## static content
+
 if isinteractive() # serve in dynamic mode for interactive sessions resp. during development
     dynamicfiles("client", "web")
 else
     staticfiles("client", "web")
 end
 
+
+## router
+
+restricted = router("", tags=["restricted"], middleware=[internal])
+
+
+## endpoints
 
 @get "/" function()
     redirect("web/index.html")
@@ -20,7 +29,7 @@ end
 end
 
 
-@post "/datasets" function(req)
+@post restricted("/datasets") function(req)
     # validate request
     contenttype = HTTP.headers(req, "Content-Type")
     if isempty(contenttype) || !contains(contenttype[1], "multipart/form-data")
@@ -47,8 +56,6 @@ end
             label = "Data Set $(today())"
         end
     end
-
-    
 
     # validate fields
     if isempty(iobuffers)

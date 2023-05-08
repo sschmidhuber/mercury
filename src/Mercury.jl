@@ -9,6 +9,7 @@ https://xkcd.com/949/
 TODOs:
 * protect against large uploads
 
+* client side upload limit
 * sort datasets
 * link sharing
 * add settings to upload (retention time, visibility)
@@ -69,7 +70,7 @@ function main()
     # start webserver
     host=config["network"]["ip"]
     port=config["network"]["port"]
-    middleware = [SubnetRestrictionMiddleware]
+    middleware = [ip_segmentation]
 
     if Threads.nthreads() == 1
         if config["disable_access_log"]
