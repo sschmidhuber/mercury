@@ -163,11 +163,12 @@ end
 Return status of available datasets. If private is set to true private and public data sets will be returned.
 If private=false (default) only public datasets will be returned.
 """
-function available_datasets(internal)
+function available_datasets(internal=false)
     ds = @chain read_datasets() begin
         map(d -> read_dataset(d.id), _)
         filter(d -> d.stage == available, _)
         filter(d -> d.hidden == false, _)
+        sort(_, by = x -> lowercase(x.label))
     end
 
     if !internal
