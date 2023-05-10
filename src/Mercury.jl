@@ -22,6 +22,8 @@ TODOs:
 * show dataset after upload, directly in upload page
 * data set content details / file list
 * large dataset / file support
+* back to top button
+* load more (pagination)
 * user info / welcome dialog
 * create setup script (load fonrend and backend dependencies)
 * create storage init function (create tmp/live directories)
@@ -40,10 +42,12 @@ const config = TOML.parsefile("../config/config.toml")
 include("model.jl")
 include("persistence.jl")
 include("service.jl")
+include("common.jl")
 include("middleware.jl")
 include("api.jl")
 
-function main()
+
+function init()
     # setup logging
     if !isinteractive()
         mkpath(dirname(config["logfile"]))
@@ -66,7 +70,9 @@ function main()
 
     # start periodic cleanup
     @async cleanup()
+end
 
+function start_webserver()
     # start webserver
     host=config["network"]["ip"]
     port=config["network"]["port"]
@@ -88,7 +94,10 @@ function main()
 end
 
 if !isinteractive()
-    main()
+    init()
+    start_webserver()
+else
+    init()
 end
 
 

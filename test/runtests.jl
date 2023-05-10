@@ -44,7 +44,8 @@ end;
 
 @testset "API" begin
     try
-        Mercury.serve(host="127.0.0.1", port=8123, async=true, access_log=nothing)
+        middleware = [Mercury.ip_segmentation]
+        Mercury.serve(middleware=middleware, host="127.0.0.1", port=8123, async=true, access_log=nothing)
 
         # upload single file
         data = Dict(

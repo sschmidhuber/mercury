@@ -8,22 +8,9 @@ class SystemStatus extends BootstrapElement {
       _totalStorage: {state: true},
       _availableStorage: {state: true},
       _usedStorage: {state: true},
-      _usedStorageRel: {state: true}
+      _usedStorageRel: {state: true},
+      _internal: {state: true}
   }
-
-  /*static styles = [
-    BootstrapElement.styles,
-    css`
-    .large {
-      display: none;
-    }
-    @include media-breakpoint-up(sm) {
-      .large {
-        display: inline-block;
-      }
-    }
-    `
-  ]*/
 
   constructor() {
       super();
@@ -42,10 +29,15 @@ class SystemStatus extends BootstrapElement {
     if (resCode == 200) {
         this._datasets = resBody.count_datasets
         this._files = resBody.count_files
-        this._totalStorage = resBody.total_storage
-        this._availableStorage = resBody.available_storage
-        this._usedStorage = resBody.used_storage
-        this._usedStorageRel = resBody.used_relative
+        if (resBody.hasOwnProperty("total_storage")) {
+          this._totalStorage = resBody.total_storage
+          this._availableStorage = resBody.available_storage
+          this._usedStorage = resBody.used_storage
+          this._usedStorageRel = resBody.used_relative
+          this._internal = true
+        } else {
+          this._internal = false
+        }
     } else {
       console.log("failed to load system status");
     }
@@ -56,8 +48,10 @@ class SystemStatus extends BootstrapElement {
       <span>
         <p style="display: inline-block; margin-right: 2em;">${this._datasets} ${this._datasets == 1 ? "Data Set" : "Data Sets"}</p>
         <p style="display: inline-block; margin-right: 2em;">${this._files} ${this._files == 1 ? "File" : "Files"}</p>
-        <p class="d-none d-lg-inline-block" style="margin-right: 2em;" title="Used storage includes not yet cleand up files.">Total Storage: ${this._totalStorage} (${this._usedStorageRel} used)</p>
-        <p class="d-none d-xl-inline-block">Free Storage: ${this._availableStorage}</p>
+        <span ?hidden=${!this._internal}>
+          <p  class="d-none d-lg-inline-block" style="margin-right: 2em;" title="Used storage includes not yet cleand up files.">Total Storage: ${this._totalStorage} (${this._usedStorageRel} used)</p>
+          <p class="d-none d-xl-inline-block">Free Storage: ${this._availableStorage}</p>
+        </span>
       </span>
       `
   }

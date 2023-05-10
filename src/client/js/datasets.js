@@ -44,7 +44,7 @@ async function loadDatasets() {
             datasetContainer.innerHTML = '<p>no Data Sets available</p>'
         } else {
             resBody.forEach(e => {
-                addDataSet(e.id, e.label, e.time_left, e.size_total, e.download_filename, e.downloads)
+                addDataSet(e.id, e.label, e.time_left_f, e.size_total_f, e.download_filename, e.downloads)
             });
         }
     } else {

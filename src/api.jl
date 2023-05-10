@@ -20,7 +20,7 @@ end
 
 
 @get "/status" function(req)
-    status()
+    status(req.context[:internal])
 end
 
 
@@ -91,7 +91,7 @@ end
 
 
 @get "/datasets" function(req)
-    available_datasets()
+    available_datasets(req.context[:internal])
 end
 
 
