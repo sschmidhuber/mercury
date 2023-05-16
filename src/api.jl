@@ -24,8 +24,8 @@ end
 end
 
 
-@get "/limits" function(req)
-    limits()
+@get "/config" function(req)
+    clientconfig(req.context[:internal])
 end
 
 
@@ -84,7 +84,7 @@ end
 
     # validate fields
     if retention_time < config["retention"]["min"] || retention_time > config["retention"]["max"]
-        return HTTP.Response(400, Dict("error" => "invalid request", "detail" => "retention time: $retention_time, out of bounds ($(config["retenion"]["min"])-$(config["retention"]["max"]))"))
+        return HTTP.Response(400, Dict("error" => "invalid request", "detail" => "retention time: $retention_time, out of bounds ($(config["retenion"]["min"])-$(config["retention"]["max"]))") |> JSON.json)
     end
     if isempty(iobuffers)
         return HTTP.Response(422, Dict("error" => "invalid request content", "detail" => "file missing") |> JSON.json)
@@ -128,18 +128,26 @@ end
     try
         dsid = UUID(id)
     catch
+        sleep(5)
         return HTTP.Response(422, Dict("error" => "invalid request", "detail" => "$id is not a valid UUID") |> JSON.json)
     end
 
-    # check authorization
-    # to be implemented when introducinf protected / encrypted data sets and external access
-    
+    # check availability
+    props = properties(dsid)
     path = get_download_path(dsid)
-    if isnothing(path)
+    if isnothing(path) || isnothing(props) || props["stage"] != available
+        sleep(5)
         return HTTP.Response(404, Dict("error" => "resource not found", "detail" => "there is no data set available with ID: $id") |> JSON.json)
     end
+
+    # check authorization
+    if !props["public"] && !req.context[:internal]
+        sleep(5)
+        return HTTP.Response(403, Dict("error" => "access denied", "detail" => "access to this data set is restricted") |> JSON.json)
+    end
+
+    # stream dataset to client
     data = Mmap.mmap(open(path), Array{UInt8,1})
-    props = properties(dsid)
     headers = [
         "Transfer-Encoding" => "chunked",
         "Content-Disposition" => "attachment; filename=\"$(props["download_filename"])\"",
@@ -154,11 +162,22 @@ end
     try
         dsid = UUID(id)
     catch
+        sleep(5)
         return HTTP.Response(422, Dict("error" => "invalid request", "detail" => "$id is not a valid UUID") |> JSON.json)
     end
+
     res = properties(UUID(id))
+
+    # check availability
     if isnothing(res)
+        sleep(5)
         return HTTP.Response(404, Dict("error" => "no DataSet with ID: $id found") |> JSON.json)
+    end
+
+    # check authorization
+    if !res["public"] && !req.context[:internal]
+        sleep(5)
+        return HTTP.Response(403, Dict("error" => "access denied", "detail" => "access to this data set is restricted") |> JSON.json)
     end
 
     return res

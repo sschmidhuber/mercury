@@ -9,8 +9,9 @@ https://xkcd.com/949/
 TODOs:
 * protect against large uploads
 
-* set hidden, public / private, retention time at upload
+* client side config (disable upload for externals)
 * copy and share download link
+* search data sets, get hidden data sets by ID
 * disable upload for external clients
 * write API tests for public / hidden flags
 * external access support (download)

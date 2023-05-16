@@ -145,20 +145,29 @@ function status(internal)
 end
 
 
-function limits()
+"""
+    clientconfig(internal=false)
+
+Returns configuration for the web client.
+"""
+function clientconfig(internal=false)
     Dict(
+        "internal" => internal,
+        "retention_default" => config["retention"]["default"],
+        "retention_min" => config["retention"]["min"],
+        "retention_max" => config["retention"]["max"] == Inf ? "Infinity" : config["retention"]["max"],
         "filesize" => config["limits"]["filesize"],
-        "filesize_pretty" => config["limits"]["filesize"] |> format_size,
+        "filesize_f" => config["limits"]["filesize"] |> format_size,
         "filenumber_per_dataset" => config["limits"]["filenumber_per_dataset"],
         "datasetsize" => config["limits"]["datasetsize"],
-        "datasetsize_pretty" => config["limits"]["datasetsize"] |> format_size,
+        "datasetsize_f" => config["limits"]["datasetsize"] |> format_size,
         "datasetnumber" => config["limits"]["datasetnumber"]
     )
 end
 
 
 """
-    available_datasets(private=false)
+    available_datasets(internal=false)
 
 Return status of available datasets. If private is set to true private and public data sets will be returned.
 If private=false (default) only public datasets will be returned.

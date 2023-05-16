@@ -9,6 +9,10 @@ loadDatasets()
 
 
 // functions
+function loadConfig() {
+    
+}
+
 function addDataSet(id, label, timeLeft, size, download_filename, downloads) {
     wrapper = document.createElement('div')
     wrapper.innerHTML = [
@@ -49,5 +53,6 @@ async function loadDatasets() {
         }
     } else {
         // add error handling
+        console.log("enexpected error while loading datasets");
     }
 }

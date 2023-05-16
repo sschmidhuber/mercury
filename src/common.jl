@@ -70,6 +70,7 @@ function dataset_to_dict(ds::DataSet)::Dict
     Dict(
         "id" => ds.id,
         "label" => ds.label,
+        "public" => ds.public,
         "tags" => ds.tags,
         "stage" => ds.stage,
         "files" => ds.filenames,
