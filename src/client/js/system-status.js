@@ -46,8 +46,8 @@ class SystemStatus extends BootstrapElement {
   render() {
       return html`
       <span>
-        <p style="display: inline-block; margin-right: 2em;">${this._datasets} ${this._datasets == 1 ? "Data Set" : "Data Sets"}</p>
-        <p style="display: inline-block; margin-right: 2em;">${this._files} ${this._files == 1 ? "File" : "Files"}</p>
+        <p style="display: inline-block; margin-right: 2em;" title="including hidden data sets">${this._datasets} ${this._datasets == 1 ? "Data Set" : "Data Sets"}</p>
+        <p style="display: inline-block; margin-right: 2em;" title="including files of hidden data sets">${this._files} ${this._files == 1 ? "File" : "Files"}</p>
         <span ?hidden=${!this._internal}>
           <p  class="d-none d-lg-inline-block" style="margin-right: 2em;" title="Used storage includes not yet cleand up files.">Total Storage: ${this._totalStorage} (${this._usedStorageRel} used)</p>
           <p class="d-none d-xl-inline-block">Free Storage: ${this._availableStorage}</p>

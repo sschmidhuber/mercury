@@ -12,7 +12,7 @@ Exchanging files within a private network or via the internet is, under some cir
 Marcury is not trying to relpace any of the following solutions:
 
 * File synchronisation: Marcury is not synchronising any files, rather use [Syncthing](https://syncthing.net/) or any public service like Dropbox.
-* Network file system: Mercury is not a network file system like NFS, SMB,... in contrary Mercury should allow file exchange without managing user accounts.
+* Network file system: Mercury is not a network file system like NFS, SMB, WebDAV... in contrary Mercury should allow file exchange without managing user accounts.
 
 # Planned Features
 To fulfill the set goals following features should be implementd:

@@ -3,8 +3,8 @@
 
 Add a new Data Set
 """
-function add_dataset(id::UUID, label::String, filenames::Vector{String}, types::Vector{T} where T <: MIME, sizes::Vector{Int}, iobuffers)
-    ds = DataSet(id, strip(label), [], filenames, config["retention"]["default"], types, sizes)
+function add_dataset(id::UUID, label::String, retention_time::Int, hidden::Bool, public::Bool, filenames::Vector{String}, types::Vector{T} where T <: MIME, sizes::Vector{Int}, iobuffers)
+    ds = DataSet(id, strip(label), [], filenames, retention_time, hidden, public, types, sizes)
     create_dataset(ds, iobuffers)
 end
 

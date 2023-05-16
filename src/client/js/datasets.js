@@ -41,7 +41,7 @@ async function loadDatasets() {
     
     if (resCode == 200) {
         if (resBody.length == 0) {
-            datasetContainer.innerHTML = '<p>no Data Sets available</p>'
+            datasetContainer.innerHTML = '<p>no visible Data Sets available</p>'
         } else {
             resBody.forEach(e => {
                 addDataSet(e.id, e.label, e.time_left_f, e.size_total_f, e.download_filename, e.downloads)

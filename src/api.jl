@@ -43,9 +43,9 @@ end
 
     # process request
     id = uuid4()
-    filenames = map(c -> c.filename, content[2:end])
-    types = map(c -> c.contenttype |> MIME, content[2:end])
-    iobuffers = map(c -> c.data, content[2:end])
+    filenames = map(c -> c.filename, content[5:end])
+    types = map(c -> c.contenttype |> MIME, content[5:end])
+    iobuffers = map(c -> c.data, content[5:end])
     sizes = map(io -> bytesavailable(io), iobuffers)
 
     label = content[1].data.data |> String
@@ -57,7 +57,35 @@ end
         end
     end
 
+    local retention_time
+    try
+        retention_time = parse(Int, content[2].data.data |> String)
+    catch err
+        showerror(stderr, err)
+        retention_time = config["retention"]["default"]
+    end
+
+    local hidden
+    try
+        hidden = parse(Bool, content[3].data.data |> String)
+    catch err
+        showerror(stderr, err)
+        hidden = false
+    end
+
+    local public
+    try
+        public = parse(Bool, content[4].data.data |> String)
+    catch err
+        showerror(stderr, err)
+        public = false
+    end
+
+
     # validate fields
+    if retention_time < config["retention"]["min"] || retention_time > config["retention"]["max"]
+        return HTTP.Response(400, Dict("error" => "invalid request", "detail" => "retention time: $retention_time, out of bounds ($(config["retenion"]["min"])-$(config["retention"]["max"]))"))
+    end
     if isempty(iobuffers)
         return HTTP.Response(422, Dict("error" => "invalid request content", "detail" => "file missing") |> JSON.json)
     end
@@ -83,7 +111,7 @@ end
     end
 
     # add new DataSet and trigger further processing
-    add_dataset(id, label, filenames, types, sizes, iobuffers)
+    add_dataset(id, label, retention_time, hidden, public, filenames, types, sizes, iobuffers)
     @async process_dataset($id)
 
     return HTTP.Response(201, Dict("id" => id) |> JSON.json)

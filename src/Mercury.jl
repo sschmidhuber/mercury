@@ -9,6 +9,12 @@ https://xkcd.com/949/
 TODOs:
 * protect against large uploads
 
+* set hidden, public / private, retention time at upload
+* copy and share download link
+* disable upload for external clients
+* write API tests for public / hidden flags
+* external access support (download)
+* external access support (upload)
 * client side upload limit
 * sort datasets
 * link sharing
@@ -17,16 +23,17 @@ TODOs:
 * icons / thumbnails
 * search datasets
 * number of files, file types and more meta data of datasets
-* external access support
 * QR code
 * show dataset after upload, directly in upload page
 * data set content details / file list
-* large dataset / file support
+* large dataset / file support (https://stackoverflow.com/questions/50121917/split-an-uploaded-file-into-multiple-chunks-using-javascript)
 * back to top button
 * load more (pagination)
 * user info / welcome dialog
 * create setup script (load fonrend and backend dependencies)
 * create storage init function (create tmp/live directories)
+* bucket / directories to seperate data sets and access to buckets / directories
+* version support for uploading same data set multiple times
 
 =#
 

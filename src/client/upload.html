@@ -69,7 +69,7 @@
             white-space: nowrap;
             -webkit-overflow-scrolling: touch;
         }
-            </style>
+      </style>
   </head>
   <body>
     <main>
@@ -99,7 +99,7 @@
         </div>
       </nav>
       <div class="mt-4">
-        <div class="bg-light p-5 rounded">
+        <div class="p-5 rounded">
           <div class="col-sm-8 mx-auto" id="newUpload">
             <h1 class="mb-4">
               Upload
@@ -112,8 +112,19 @@
                   <input id="label" name="label" type="text"/>
                 </div>
                 <div class="mb-3">
-                  <input class="form-check-input" id="directoryCheckbox" multiple="" type="checkbox"/>
-                  <label class="form-label" for="directoryCheckbox">Directory upload</label>
+                  <retention-time-selector id="retentionTime" class="mb-3" default="48"></retention-time-selector>
+                </div>
+                <div class="mb-3">
+                  <input class="form-check-input" id="publicCheckbox" type="checkbox"/>
+                  <label class="form-label" for="publicCheckbox" title='A "public" data set can be accessed by external users. If a data set is not public external access will be denied.'>Public data set</label>
+                </div>
+                <div class="mb-3">
+                  <input class="form-check-input" id="hiddenCheckbox" type="checkbox"/>
+                  <label class="form-label" for="hiddenCheckbox" title="Hidden data sets will not be displayed directly. They are only accessible via the download link or by entering the data set ID.">Hide data set</label>
+                </div>
+                <div class="mb-3">
+                  <input class="form-check-input" id="directoryCheckbox" type="checkbox"/>
+                  <label class="form-label" for="directoryCheckbox" title="Upload individual files or a whole directory.">Directory upload</label>
                 </div>
                 <div class="mb-3">
                   <label class="form-label" id="fileSelectorLabel" for="fileSelector">Choose a file</label>
@@ -137,6 +148,7 @@
       </div>
     </main>
     <script src="js/upload-status.js" type="module"></script>
+    <script src="js/retention-time-selector.js" type="module"></script>
     <script src="js/upload.js"></script>
   </body>
 </HTML>

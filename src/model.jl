@@ -55,7 +55,7 @@ mutable struct DataSet
     downloads::Int
 end
 
-DataSet(id, label, tags, filenames, retention, types, sizes) = DataSet(id, label, tags, filenames, initial, now(), now(), retention, false, false, false, types, sizes, 0)
+DataSet(id, label, tags, filenames, retention, hidden, public, types, sizes) = DataSet(id, label, tags, filenames, initial, now(), now(), retention, hidden, false, public, types, sizes, 0)
 
 function isequal(x::DataSet, y::DataSet)
     x.id == y.id &&
