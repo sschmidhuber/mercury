@@ -111,10 +111,10 @@ end
     end
 
     # add new DataSet and trigger further processing
-    add_dataset(id, label, retention_time, hidden, public, filenames, types, sizes, iobuffers)
+    dataset = add_dataset(id, label, retention_time, hidden, public, filenames, types, sizes, iobuffers)
     @async process_dataset($id)
 
-    return HTTP.Response(201, Dict("id" => id) |> JSON.json)
+    return HTTP.Response(201, dataset |> JSON.json)
 end
 
 

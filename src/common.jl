@@ -71,6 +71,7 @@ function dataset_to_dict(ds::DataSet)::Dict
         "id" => ds.id,
         "label" => ds.label,
         "public" => ds.public,
+        "hidden" => ds.hidden,
         "tags" => ds.tags,
         "stage" => ds.stage,
         "files" => ds.filenames,

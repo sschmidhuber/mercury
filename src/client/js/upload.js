@@ -112,9 +112,11 @@ async function upload(event) {
     .then((data) => data)
     
     if (resCode == 201) {
-        infoPanel.innerHTML = "<p>Upload successful, new Data Set ID: <b>" + resBody.id + "</b></p>"
         uploadStatusElement.setAttribute("state", "uploaded");
         uploadStatusElement.setAttribute("dataSetID", resBody.id);
+        let datasetElement = document.createElement("dataset-element");
+        datasetElement.setAttribute("dataset", JSON.stringify(resBody));
+        uploadStatus.append(datasetElement)
     } else if (resCode == 500) {
         uploadStatusElement.setAttribute("state", "failed");
         uploadStatusElement.setAttribute("error", "Failed to process file upload.")       

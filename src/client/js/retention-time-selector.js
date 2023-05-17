@@ -3,9 +3,13 @@ import {BootstrapElement} from '../deps/BootstrapElement.js';
 
 class RetentionTimeSelector extends BootstrapElement {
   static properties = {
-    default: {},
-    retentionTime: {state: true},
+    retentionTime: {},
     _retentionTimeFormated: {state: true}
+  }
+
+  constructor() {
+    super()
+    this._retentionTimeFormated = ""
   }
 
   static styles = [
@@ -23,12 +27,6 @@ class RetentionTimeSelector extends BootstrapElement {
     `
   ]
 
-  connectedCallback() {
-    super.connectedCallback()
-      this._retentionTimeFormated = "";
-      this.retentionTime = this.default
-  }
-
   // return a given time in hours as string, e.g. 815 hours are 5 weeks
   retentionTimeString(hours) {
     if (hours <= 48) {
@@ -40,7 +38,7 @@ class RetentionTimeSelector extends BootstrapElement {
     }
   }
 
-  _change(e) {
+  change(e) {
     this.retentionTime = e.target.value
     this._retentionTimeFormated = this.retentionTimeString(e.target.value)
   }
@@ -48,7 +46,7 @@ class RetentionTimeSelector extends BootstrapElement {
   render() {
       return html`
       <label for="retentionTime" class="form-label">Retention time: ${this.retentionTime} h ${this._retentionTimeFormated}</label>
-      <input @input=${this._change} type="range" class="form-range" min="1" step="1" max="720" id="retentionTime" value=48>
+      <input @input=${this.change} type="range" class="form-range" min="1" step="1" max="720" id="retentionTime" value=${this.retentionTime}>
       `
   }
 }

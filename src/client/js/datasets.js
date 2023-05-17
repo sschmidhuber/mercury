@@ -1,37 +1,20 @@
 // DOM elements
-const uploadLink = document.querySelector("#datasets")
+const datasetLink = document.querySelector("#datasets")
+const uploadLink = document.querySelector("#upload")
 const datasetContainer = document.querySelector("#datasetContainer")
 
 
 // init
-uploadLink.classList.add("active")
+datasetLink.classList.add("active")
 loadDatasets()
 
 
-// functions
-function loadConfig() {
-    
-}
 
-function addDataSet(id, label, timeLeft, size, download_filename, downloads) {
-    wrapper = document.createElement('div')
-    wrapper.innerHTML = [
-        '<div>',
-        '   <div class="card my-3">',
-        `   <div class="card-header">ID: ${id}</div>`,
-        '       <div class="card-body">',
-        `           <h5 class="card-title">${label}</h5>`,
-        `           <p class="card-text">Retention time:\t ${timeLeft}<br>`,
-        `           Total file size:\t ${size}<br>`,
-        `           Downloads:\t ${downloads}</p>`,
-        `           <a class="btn btn-primary" href="/datasets/${id}" download="${download_filename}">Download</a>`,
-        '       </div>',
-        '   </div>',
-        '   </div>',
-        '</div>'
-    ].join('')
-  
-    datasetContainer.append(wrapper)
+// functions
+function addDataSet(dataset) {
+    let datasetElement = document.createElement("dataset-element");
+    datasetElement.setAttribute("dataset", JSON.stringify(dataset));
+    datasetContainer.append(datasetElement)
 }
 
 async function loadDatasets() {
@@ -47,12 +30,12 @@ async function loadDatasets() {
         if (resBody.length == 0) {
             datasetContainer.innerHTML = '<p>no visible Data Sets available</p>'
         } else {
-            resBody.forEach(e => {
-                addDataSet(e.id, e.label, e.time_left_f, e.size_total_f, e.download_filename, e.downloads)
+            resBody.forEach(dataset => {
+                addDataSet(dataset)
             });
         }
     } else {
         // add error handling
-        console.log("enexpected error while loading datasets");
+        console.log("unexpected error while loading datasets");
     }
 }

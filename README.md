@@ -8,6 +8,11 @@ Exchanging files within a private network or via the internet is, under some cir
 * Use __any device with a web browser__, like your phone, tablet, pc,... (no additional software requiered)
 * Run within your own network, i.e. a single board computer
 
+Public services providing similar capabilities are:
+* WeTransfer
+* SendGB
+* Filemail
+
 ## No-Goals
 Marcury is not trying to relpace any of the following solutions:
 

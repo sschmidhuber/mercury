@@ -9,23 +9,19 @@ https://xkcd.com/949/
 TODOs:
 * protect against large uploads
 
-* client side config (disable upload for externals)
 * copy and share download link
+* short dataset ID and copy dataset ID to clipboard
 * search data sets, get hidden data sets by ID
-* disable upload for external clients
 * write API tests for public / hidden flags
 * external access support (download)
 * external access support (upload)
 * client side upload limit
 * sort datasets
 * link sharing
-* add settings to upload (retention time, visibility)
-* short dataset ID and copy dataset ID to clipboard
 * icons / thumbnails
 * search datasets
 * number of files, file types and more meta data of datasets
 * QR code
-* show dataset after upload, directly in upload page
 * data set content details / file list
 * large dataset / file support (https://stackoverflow.com/questions/50121917/split-an-uploaded-file-into-multiple-chunks-using-javascript)
 * back to top button
@@ -35,6 +31,7 @@ TODOs:
 * create storage init function (create tmp/live directories)
 * bucket / directories to seperate data sets and access to buckets / directories
 * version support for uploading same data set multiple times
+* add sceleton for not yet loaded content, e.g. datasets and system status
 
 =#
 
