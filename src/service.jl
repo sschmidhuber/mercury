@@ -6,7 +6,7 @@ Add a new Data Set
 function add_dataset(id::UUID, label::String, retention_time::Int, hidden::Bool, public::Bool, filenames::Vector{String}, types::Vector{T} where T <: MIME, sizes::Vector{Int}, iobuffers)
     ds = DataSet(id, strip(label), [], filenames, retention_time, hidden, public, types, sizes)
     create_dataset(ds, iobuffers)
-    return dataset_to_dict(ds)
+    return ds
 end
 
 
@@ -199,19 +199,27 @@ end
 Return the path of the correspoonding download artefact associated to the given ID.
 Return nothing, if there is no data set corresponding to the given ID.
 """
-function get_download_path(id::UUID)
+function get_download_uri(id::UUID)
     ds = read_dataset(id)
     if isnothing(ds) || ds.stage != available
         return nothing
     end
 
-    livepath = joinpath(config["storage_dir"], "live", string(id))
-    filename = length(ds.filenames) == 1 && dirname(ds.filenames[1]) == "" ? ds.filenames[1] : ds.label * ".zip"
+    directory  = "/live/" * string(id) * "/"
+    filename = length(ds.filenames) == 1 && dirname(ds.filenames[1]) == "" ? ds.filenames |> only : ds.label * ".zip"
+
+    return directory * filename
+end
+
+
+function increment_download_counter(id::UUID)
+    ds = read_dataset(id)
+    if isnothing(ds) || ds.stage != available
+        return nothing
+    end
 
     ds.downloads += 1
     update_dataset(ds)
-
-    return joinpath(livepath, filename)
 end
 
 

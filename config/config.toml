@@ -11,7 +11,7 @@ skip_malware_check = true
 disable_access_log = false
 
 [network]
-ip = "0.0.0.0"
+ip = "127.0.0.1"
 port = 8000
 
 # access from IPs outside below subnets will be considered external
@@ -19,6 +19,10 @@ internal_subnets = ["127.0.0.0/8", "10.0.0.0/8"] #, "172.16.0.0/12", "192.168.0.
 
 # allow access from external (external = not from internal_subnets) client IPs
 allow_external_access = true
+
+# base URL of the mercury instance in the internal resp. external network
+internal_url = "https://localhost"
+external_url = "https://fileexchange.ddns.net"
 
 [retention]
 # retention times in hours
@@ -35,8 +39,8 @@ interval = 300
 [limits]
 # in bytes
 # put "inf" for infinite
-filesize = 838860800
+filesize = 8388608000
 filenumber_per_dataset = 1000000
-datasetsize = 838860800
+datasetsize = 8388608000
 datasetnumber = 1000000
 storage = 21000000000

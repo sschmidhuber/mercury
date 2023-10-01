@@ -4,7 +4,7 @@
     <meta content="width=device-width, initial-scale=1" name="viewport"/>
     <meta content="Mercury, a simple file exchange server" name="description"/>
     <meta content="Stefan Schmidhuber (stefan.schmidhuber@gmx.at)" name="author"/>
-    <link href="/web/icons/favicon.ico" rel="icon" type="image/x-icon"/>
+    <link href="/client/icons/favicon.ico" rel="icon" type="image/x-icon"/>
     <title>
       Mercury
     </title>
@@ -70,7 +70,11 @@
             white-space: nowrap;
             -webkit-overflow-scrolling: touch;
         }
-      </style>
+
+        button .icon {
+            margin-right: 0.5rem;
+        }
+        </style>
   </head>
   <body>
     <main>
@@ -109,31 +113,42 @@
             <form>
               <div>
                 <div class="mb-3">
-                  <label class="form-label" for="label">Label</label>
+                  <label class="form-label" for="label">
+                    Label
+                  </label>
                   <input id="label" name="label" type="text"/>
                 </div>
                 <div class="mb-3">
-                  <retention-time-selector id="retentionTime" class="mb-3" retentionTime="48"></retention-time-selector>
+                  <retention-time-selector class="mb-3" id="retentionTime" retentiontime="48"></retention-time-selector>
                 </div>
                 <div class="mb-3">
                   <input class="form-check-input" id="publicCheckbox" type="checkbox"/>
-                  <label class="form-label" for="publicCheckbox" title='A "public" data set can be accessed by external users. If a data set is not public external access will be denied.'>Public data set</label>
+                  <label class="form-label" for="publicCheckbox" title="A &quot;public&quot; data set can be accessed by external users. If a data set is not public external access will be denied.">
+                    Public data set
+                  </label>
                 </div>
                 <div class="mb-3">
                   <input class="form-check-input" id="hiddenCheckbox" type="checkbox"/>
-                  <label class="form-label" for="hiddenCheckbox" title="Hidden data sets will not be displayed directly. They are only accessible via the download link or by entering the data set ID.">Hide data set</label>
+                  <label class="form-label" for="hiddenCheckbox" title="Hidden data sets will not be displayed directly. They are only accessible via the download link or by entering the data set ID.">
+                    Hide data set
+                  </label>
                 </div>
                 <div class="mb-3">
                   <input class="form-check-input" id="directoryCheckbox" type="checkbox"/>
-                  <label class="form-label" for="directoryCheckbox" title="Upload individual files or a whole directory.">Directory upload</label>
+                  <label class="form-label" for="directoryCheckbox" title="Upload individual files or a whole directory.">
+                    Directory upload
+                  </label>
                 </div>
                 <div class="mb-3">
-                  <label class="form-label" id="fileSelectorLabel" for="fileSelector">Choose a file</label>
+                  <label class="form-label" for="fileSelector" id="fileSelectorLabel">
+                    Choose a file
+                  </label>
                   <input class="form-control" id="fileSelector" multiple="" name="myFile" type="file"/>
                 </div>
               </div>
               <div>
                 <button class="btn btn-primary" id="uploadButton">
+                  <img class="icon" src="icons/upload.svg"/>
                   Upload
                 </button>
               </div>

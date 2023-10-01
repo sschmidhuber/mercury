@@ -31,3 +31,6 @@ deps/
 
 # data directory
 data/
+
+# log files
+*.log

@@ -1,12 +1,3 @@
-## static content
-
-if isinteractive() # serve in dynamic mode for interactive sessions resp. during development
-    dynamicfiles("client", "web")
-else
-    staticfiles("client", "web")
-end
-
-
 ## router
 
 restricted = router("", tags=["restricted"], middleware=[internal])
@@ -15,7 +6,7 @@ restricted = router("", tags=["restricted"], middleware=[internal])
 ## endpoints
 
 @get "/" function()
-    redirect("web/index.html")
+    redirect("client/index.html")
 end
 
 
@@ -48,6 +39,7 @@ end
     iobuffers = map(c -> c.data, content[5:end])
     sizes = map(io -> bytesavailable(io), iobuffers)
 
+    
     label = content[1].data.data |> String
     if label == ""
         if length(filenames) == 1
@@ -81,7 +73,6 @@ end
         public = false
     end
 
-
     # validate fields
     if retention_time < config["retention"]["min"] || retention_time > config["retention"]["max"]
         return HTTP.Response(400, Dict("error" => "invalid request", "detail" => "retention time: $retention_time, out of bounds ($(config["retenion"]["min"])-$(config["retention"]["max"]))") |> JSON.json)
@@ -103,6 +94,7 @@ end
     if sum(sizes) > config["limits"]["datasetsize"]
         return HTTP.Response(413, Dict("error" => "dataset exceeds size limit", "detail" => "dataset exceeds size limit of $(config["limits"]["datasetsize"] |> format_size)") |> JSON.json)
     end
+    
     if 1 + count_ds() > config["limits"]["datasetnumber"]
         return HTTP.Response(507, Dict("error" => "maximum number of datasets exceeded", "detail" => "limit of $(config["limits"]["datasetnumber"]) datasets exceeded") |> JSON.json)
     end
@@ -112,9 +104,10 @@ end
 
     # add new DataSet and trigger further processing
     dataset = add_dataset(id, label, retention_time, hidden, public, filenames, types, sizes, iobuffers)
+    # Threads.@spawn  ##  @spawn lead to an memory leak, using async as workaround for now
     @async process_dataset($id)
 
-    return HTTP.Response(201, dataset |> JSON.json)
+    return HTTP.Response(201, dataset |> dataset_to_dict |> JSON.json)
 end
 
 
@@ -134,8 +127,7 @@ end
 
     # check availability
     props = properties(dsid)
-    path = get_download_path(dsid)
-    if isnothing(path) || isnothing(props) || props["stage"] != available
+    if isnothing(props) || props["stage"] != available
         sleep(5)
         return HTTP.Response(404, Dict("error" => "resource not found", "detail" => "there is no data set available with ID: $id") |> JSON.json)
     end
@@ -146,15 +138,10 @@ end
         return HTTP.Response(403, Dict("error" => "access denied", "detail" => "access to this data set is restricted") |> JSON.json)
     end
 
-    # stream dataset to client
-    data = Mmap.mmap(open(path), Array{UInt8,1})
-    headers = [
-        "Transfer-Encoding" => "chunked",
-        "Content-Disposition" => "attachment; filename=\"$(props["download_filename"])\"",
-        "Content-Type" => mime_from_extension(props["download_extension"]),
-        "Content-Length" => props["sizes"] |> sum
-    ]
-    return HTTP.Response(200, headers, data)
+    uri = get_download_uri(dsid)
+    increment_download_counter(dsid)
+
+    return HTTP.Response(200, ["X-Accel-Redirect" => uri])
 end
 
 

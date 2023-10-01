@@ -6,8 +6,8 @@ const datasetContainer = document.querySelector("#datasetContainer")
 
 // init
 datasetLink.classList.add("active")
-loadDatasets()
 
+loadDatasets()
 
 
 // functions
@@ -38,4 +38,8 @@ async function loadDatasets() {
         // add error handling
         console.log("unexpected error while loading datasets");
     }
+}
+
+function testFunction(msg) {
+    console.log(msg)
 }

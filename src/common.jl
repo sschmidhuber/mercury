@@ -60,12 +60,18 @@ function format_size(bytes::Int)::String
     return size
 end
 
+"""
+    dataset_to_dict(ds::DataSet)::Dict
 
+Export a dataset object into dict type and format fields to display on client side.
+
+"""
 function dataset_to_dict(ds::DataSet)::Dict
     size_total = ds.sizes |> sum
     time_left = ds.timestamp + Hour(ds.retention)
     download_extension = length(ds.filenames) == 1 && dirname(ds.filenames[1]) == "" ? extension_from_mime(ds.types[1]) : ".zip"
     download_filename = length(ds.filenames) == 1 && dirname(ds.filenames[1]) == "" ? ds.filenames[1] : ds.label * ".zip"
+    download_url = (ds.public ? config["network"]["external_url"] : config["network"]["internal_url"]) * "/datasets/$(ds.id)"
 
     Dict(
         "id" => ds.id,
@@ -85,6 +91,7 @@ function dataset_to_dict(ds::DataSet)::Dict
         "time_left_f" => time_left |> format_retention,
         "downloads" => ds.downloads,
         "download_extension" => download_extension,
-        "download_filename" => download_filename
+        "download_filename" => download_filename,
+        "download_url" => download_url
     )
 end

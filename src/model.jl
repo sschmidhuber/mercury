@@ -74,7 +74,7 @@ function isequal(x::DataSet, y::DataSet)
     x.downloads == y.downloads
 end
 
-function dataset(dict::Dict)
+function dataset(dict::Dict)::DataSet
     DataSet(
         UUID(dict["id"]),
         dict["label"],
@@ -93,7 +93,7 @@ function dataset(dict::Dict)
     )
 end
 
-function unmarshal_dataset(dict::Dict)
+function unmarshal_dataset(dict::Dict)::Dict{UUID, DataSet}
     datasets = Dict{UUID, DataSet}()
 
     foreach(values(dict)) do element

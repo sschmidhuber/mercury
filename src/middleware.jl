@@ -21,7 +21,20 @@ function ip_segmentation(handler)
     end
 
     return function(req::HTTP.Request)
-        clientip = req.context[:ip]
+        local clientip::IPv4
+
+        xrealip_header = filter(x -> first(x) == "X-Real-IP", req.headers)
+        if isempty(xrealip_header)
+            @error "\"X-Real-IP\" header not found. Ensure the reverse proxy sets the correct remote address."
+            return HTTP.Response(500, "Missing header, wrong proxy configuration")
+        else
+            try
+                clientip = IPv4(last(xrealip_header |> only))
+            catch e
+                @error "invalid \"X-Real-IP\" header: $xrealip_header"
+                return HTTP.Response(500, "Invalid header, wrong proxy configuration")
+            end
+        end
         
         n = @chain subnets begin
             clientip .∈ _

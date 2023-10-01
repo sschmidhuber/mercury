@@ -10,9 +10,35 @@ class DataSet extends BootstrapElement {
       super();
   }
 
+  emailBody() {
+    let body = 'Download%20Link:%20' + this.dataset.download_url
+    if (!this.dataset.public) {
+      body += "%0A%0AThe data set is only available within the internal network."
+    }
+    body += "%0A%0A%0AMercury - the file exchange server"
+
+    return body
+  }
+
+  copyLink(event) {
+    event.preventDefault();
+    navigator.clipboard.writeText(this.dataset.download_url);
+    let img = this.renderRoot.querySelector("#clipboard-icon")
+    console.log(img);
+    img.src = "icons/check-circle.svg"
+    setTimeout(() => {img.src = "icons/clipboard.svg"}, 3000)
+  }
 
   render() {
-    console.log(this.dataset);
+    let emailBody = this.emailBody()
+    let shareData = {
+      url: this.dataset.download_url
+    }
+    let webShareAPI = !(navigator.canShare == undefined)
+    if (webShareAPI) {
+      webShareAPI = navigator.canShare()
+    }
+
       return html`
       <div>
         <div class="shadow card my-3">
@@ -26,7 +52,26 @@ class DataSet extends BootstrapElement {
             <h5 class="card-title">${this.dataset.label}</h5><p class="card-text">Retention time: ${this.dataset.time_left_f}<br>
               Size: ${this.dataset.size_total_f} (${this.dataset.files.length} ${this.dataset.files.length == 1 ? "file" : "files"})<br>
               Downloads: ${this.dataset.downloads}</p>
-              <a class="btn btn-primary btn-sm" href="/datasets/${this.dataset.id}" download="${this.dataset.download_filename}">Download</a>
+              <a class="btn btn-primary" href="/datasets/${this.dataset.id}" download="${this.dataset.download_filename}">
+                <img src="icons/download.svg"/>&nbsp;Download</a>
+              <a ?hidden=${webShareAPI} class="btn btn-secondary" href="mailto:?to=&subject=${this.dataset.label}&body=${emailBody}">
+                <img src="icons/envelope.svg"/>
+                <span class="d-none d-lg-inline-block">&nbsp;Send Link</span>
+              </a>
+              <a ?hidden=${!isSecureContext} @click=${this.copyLink} class="btn btn-secondary">
+                <img id="clipboard-icon" src="icons/clipboard.svg"/>
+                <span class="d-none d-lg-inline-block">&nbsp;Copy Link</span>
+              </a>
+              <a ?hidden=${true} @click=${"navigator.share(shareData)"} class="btn btn-secondary">
+                <!-- not implemented yet -->
+                <img src="icons/share-fill.svg"/>
+                <span class="d-none d-lg-inline-block">&nbsp;Share Link</span>
+              </a>
+              <a ?hidden=${true} class="btn btn-secondary" href="">
+                <!-- not implemented yet -->
+                <img src="icons/qr-code.svg"/>
+                <span class="d-none d-lg-inline-block">&nbsp;QR Code</span>
+              </a>
             </div>
           </div>
         </div>
