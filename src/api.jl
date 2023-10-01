@@ -10,6 +10,11 @@ restricted = router("", tags=["restricted"], middleware=[internal])
 end
 
 
+@get "/health" function()
+    healthcheck()
+end
+
+
 @get "/status" function(req)
     status(req.context[:internal])
 end

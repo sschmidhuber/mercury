@@ -1,4 +1,19 @@
 """
+    healthcheck()
+
+Return metrics about system health.
+"""
+function healthcheck()
+    hostinfo = retrieve_host_info("localhost")
+    memory = map(meminfo(hostinfo)) do value
+        round(value / 1024 / 1024, digits=2)
+    end
+
+    return memory
+end
+
+
+"""
     add_dataset(id::UUID, filename::Vector{AbstractString}, type::Vector{MIME}, files)
 
 Add a new Data Set
