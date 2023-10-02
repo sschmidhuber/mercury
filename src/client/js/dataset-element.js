@@ -53,23 +53,23 @@ class DataSet extends BootstrapElement {
               Size: ${this.dataset.size_total_f} (${this.dataset.files.length} ${this.dataset.files.length == 1 ? "file" : "files"})<br>
               Downloads: ${this.dataset.downloads}</p>
               <a class="btn btn-primary" href="/datasets/${this.dataset.id}" download="${this.dataset.download_filename}">
-                <img src="icons/download.svg"/>&nbsp;Download</a>
+                <img src="icons/download.svg" style="padding-bottom: 0.2rem;"/>&nbsp;Download</a>
               <a ?hidden=${webShareAPI} class="btn btn-secondary" href="mailto:?to=&subject=${this.dataset.label}&body=${emailBody}">
-                <img src="icons/envelope.svg"/>
+                <span> <img src="icons/envelope.svg" style="padding-bottom: 0.2rem;"/> </span>
                 <span class="d-none d-lg-inline-block">&nbsp;Send Link</span>
               </a>
               <a ?hidden=${!isSecureContext} @click=${this.copyLink} class="btn btn-secondary">
-                <img id="clipboard-icon" src="icons/clipboard.svg"/>
+                <span> <img id="clipboard-icon" src="icons/clipboard.svg" style="padding-bottom: 0.2rem;"/> </span>
                 <span class="d-none d-lg-inline-block">&nbsp;Copy Link</span>
               </a>
               <a ?hidden=${true} @click=${"navigator.share(shareData)"} class="btn btn-secondary">
                 <!-- not implemented yet -->
-                <img src="icons/share-fill.svg"/>
+                <span> <img src="icons/share-fill.svg" style="padding-bottom: 0.2rem;"/> </span>
                 <span class="d-none d-lg-inline-block">&nbsp;Share Link</span>
               </a>
               <a ?hidden=${true} class="btn btn-secondary" href="">
                 <!-- not implemented yet -->
-                <img src="icons/qr-code.svg"/>
+                <span> <img src="icons/qr-code.svg" style="padding-bottom: 0.2rem;"/> </span>
                 <span class="d-none d-lg-inline-block">&nbsp;QR Code</span>
               </a>
             </div>

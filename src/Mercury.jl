@@ -51,6 +51,7 @@ TODOs:
 cd(@__DIR__)
 using Pkg
 Pkg.activate("..")
+Pkg.instantiate()
 using Dates, UUIDs, MIMEs, TOML, Chain, JSON, HTTP, Oxygen, Mmap, LoggingExtras, Sockets, IPNets, SystemStats
 
 const config = TOML.parsefile("../config/config.toml")
