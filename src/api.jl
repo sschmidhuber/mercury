@@ -146,7 +146,7 @@ end
     uri = get_download_uri(dsid)
     increment_download_counter(dsid)
 
-    return HTTP.Response(200, ["X-Accel-Redirect" => uri])
+    return HTTP.Response(200, ["X-Accel-Redirect" => uri, "Content-Disposition" => "attachment; filename=\"$(props["download_filename"])\""])
 end
 
 
