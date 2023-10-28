@@ -15,7 +15,7 @@ ip = "127.0.0.1"
 port = 8000
 
 # access from IPs outside below subnets will be considered external
-internal_subnets = ["127.0.0.0/8", "10.0.0.0/8"] #, "172.16.0.0/12", "192.168.0.0/16"]
+internal_subnets = ["127.0.0.0/8", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
 
 # allow access from external (external = not from internal_subnets) client IPs
 allow_external_access = true

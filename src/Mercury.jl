@@ -120,7 +120,15 @@ function restart_webserver(async=true)
     start_webserver(async)
 end
 
-if isinteractive()
+
+if haskey(ENV, "MODE")
+    if ENV["MODE"] == "test"    # this mode is used for automated tests
+        @info "run test mode"
+    else
+        @error "unknown mode $(ENV["MODE"])"
+    end
+elseif isinteractive()  # this mode is used for development
+    @info "run interactive mode"
     init()
     try
         start_webserver(true)
@@ -129,11 +137,12 @@ if isinteractive()
             @info "port already in use, restart server"
             restart_webserver(true)
         else
-            stop_webserver()
+            @error "unexpected error"
             showerror(stderr, e)
+            stop_webserver()
         end
-    end
-else
+    end    
+else    # bootstrap Mercury
     init()
     start_webserver(false)
 end

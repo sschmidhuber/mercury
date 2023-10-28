@@ -27,6 +27,7 @@ end
 
 @post restricted("/datasets") function(req)
     # validate request
+    @debug "validate request"
     contenttype = HTTP.headers(req, "Content-Type")
     if isempty(contenttype) || !contains(contenttype[1], "multipart/form-data")
         return HTTP.Response(415, Dict("error" => "invalid Content-Type", "detail" => "Expect \"multipart/form-data\"") |> JSON.json)
@@ -37,6 +38,7 @@ end
         return HTTP.Response(422, Dict("error" => "invalid request content", "detail" => "parsing multipart form failed") |> JSON.json)
     end
 
+    @debug "process request"
     # process request
     id = uuid4()
     filenames = map(c -> c.filename, content[5:end])
@@ -58,6 +60,7 @@ end
     try
         retention_time = parse(Int, content[2].data.data |> String)
     catch err
+        @warn "couldn't parse \"retention_time\""
         showerror(stderr, err)
         retention_time = config["retention"]["default"]
     end
@@ -66,6 +69,7 @@ end
     try
         hidden = parse(Bool, content[3].data.data |> String)
     catch err
+        @warn "couldn't parse \"hidden\""
         showerror(stderr, err)
         hidden = false
     end
@@ -74,6 +78,7 @@ end
     try
         public = parse(Bool, content[4].data.data |> String)
     catch err
+        @warn "couldn't parse \"public\""
         showerror(stderr, err)
         public = false
     end

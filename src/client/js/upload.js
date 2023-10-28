@@ -36,18 +36,19 @@ const alert = (message, type, id) => {
 
 
 // listeners
-uploadButton.addEventListener("click", upload)
-directoryCheckbox.addEventListener("click", directoryMode)
-publicCheckbox.addEventListener("click", publicVisibilityWarning)
-hiddenCheckbox.addEventListener("click", publicVisibilityWarning)
-fileSelector.addEventListener("input", publicVisibilityWarning)
-fileSelector.addEventListener("input", resetNoFilesWarning)
+uploadButton.addEventListener("click", upload);
+directoryCheckbox.addEventListener("click", directoryMode);
+publicCheckbox.addEventListener("click", publicVisibilityWarning);
+hiddenCheckbox.addEventListener("click", publicVisibilityWarning);
+fileSelector.addEventListener("input", publicVisibilityWarning);
+fileSelector.addEventListener("input", resetNoFilesWarning);
+fileSelector.addEventListener("change", () => {console.log(fileSelector.files)});
 
 //functions
 function resetNoFilesWarning(event) {
     oldAlert = document.querySelector("#noFilesWarning")
     if (fileSelector.files.length != 0 && oldAlert != null) {
-        oldAlert.remove()    
+        oldAlert.remove()
     }
 }
 
