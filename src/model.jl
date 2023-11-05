@@ -12,27 +12,22 @@ A DataSet moves through different stages during its lifecycle:
 """
 @enum Stage begin
     initial
-    #prepared
     scanned
+    prepared
     available
     deleted
 end
 
 """
-    stage(str::AbstractString)
+    stage(str::AbstractString)::Stage
 
 Return the stage enum corresponding to the given string representation.
 """
-function stage(str::AbstractString)
-    if str == "initial"
-        Stage(0)
-    elseif str == "scanned"
-        Stage(1)
-    elseif str == "available"
-        Stage(2)
-    elseif str == "deleted"
-        Stage(3)
-    else
+function stage(str::AbstractString)::Stage
+    try
+            getproperty(Mercury, Symbol(str))
+    catch _
+        @error "invalid stage: $str"
         throw(DomainError(str))
     end
 end
@@ -58,6 +53,7 @@ mutable struct DataSet
 end
 
 DataSet(id, label, tags, filenames, retention, hidden, public, types, sizes) = DataSet(id, label, tags, filenames, initial, now(), now(), retention, hidden, false, public, types, sizes, 0)
+
 
 function isequal(x::DataSet, y::DataSet)
     x.id == y.id &&

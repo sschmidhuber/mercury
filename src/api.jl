@@ -24,7 +24,6 @@ end
     clientconfig(req.context[:internal])
 end
 
-
 @post restricted("/datasets") function(req)
     # validate request
     @debug "validate request"

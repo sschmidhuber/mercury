@@ -59,8 +59,7 @@ end
             "hidden" => "false",
             "public" => "false",
             "file" => HTTP.Multipart("\$pécial ¢haräcterß.txt", open(joinpath("..","test", "data", "\$pécial ¢haräcterß.txt")), "text/plain")
-            #"file" => HTTP.Multipart("Mercury", open(joinpath("..","test", "data", "mercury.png")), "imp/png")
-        ]
+            ]
         body = HTTP.Form(data)
         res = HTTP.request("POST", "http://127.0.0.1:8123/datasets", request_header, body)
 
@@ -92,7 +91,7 @@ end
             res = HTTP.request("GET", "http://127.0.0.1:8123/datasets/$id2/properties", request_header)
             res = res.body |> String |> JSON.parse
             @info "stage: $(res["stage"])"
-            @test res["stage"] == "scanned" || res["stage"] == "available"
+            @test res["stage"] == "scanned" || res["stage"] == "prepared" ||res["stage"] == "available"
             sleep(2)
         end
 

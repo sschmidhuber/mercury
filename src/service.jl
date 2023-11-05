@@ -31,47 +31,74 @@ end
 Process a newly uploaded dataset.
 """
 function process_dataset(id::UUID)
-    if malwarescan(id)
+    if config["skip_malware_check"] && prepare(id)
         promote_dataset(id)
+    elseif malwarescan(id) && prepare(id)
+        promote_dataset(id)
+    else
+        @warn "processing DataSet: $(string(id)) failed"
     end
 end
 
 
 """
-    malwarescan(id::UUID)
+    malwarescan(id::UUID)::Bool
 
 Returns true, if scan was successful (no malware found) or false if test failed or malware was detected.
 In case malware was found, the data will be deleted immediately.
 """
-function malwarescan(id::UUID)
+function malwarescan(id::UUID)::Bool
     try
         ds = read_dataset(id)
         if isnothing(ds)
             @warn "no files found corresponding to ID: $id"
             return false
         end
-        if config["skip_malware_check"] == true
-            @warn "skip malware check for: $id"
+        
+        dir = joinpath(config["storage_dir"], "tmp", string(id))
+        try
+            run(`clamscan -ri --no-summary $dir`)
             ds.stage = scanned
             ds.stagechange = now()
             update_dataset(ds)
             return true
-        else
-            dir = joinpath(config["storage_dir"], "tmp", string(id))
-            try
-                run(`clamscan -ri --no-summary $dir`)
-                ds.stage = scanned
-                ds.stagechange = now()
-                update_dataset(ds)
-                return true
-            catch _
-                @warn "malware check failed for: $id"
-                delete_dataset(id, hard = true)
-                return false
+        catch e
+            @warn "malware check failed for: $id"
+            if e isa Base.IOError
+                @warn "check if clamav is installed on the host"
             end
-        end
+            delete_dataset(id, hard = true)
+            return false
+        end          
     catch _
         @warn "malware check failed"
+        return false
+    end        
+end
+
+
+
+"""
+    prepare(id::UUID)
+
+Preprocess DataSet, and set stage to "prepared" before it can be promoted for download.
+Return true if preparation was executed successfully, othewise return false.
+"""
+function prepare(id::UUID)::Bool
+    try
+        ds = read_dataset(id)
+        if isnothing(ds)
+            @warn "no DataSet found corresponding to ID: $id"
+            return false
+        else
+            #TODO: add DataSet validation here
+            ds.stage = prepared
+            ds.stagechange = now()
+            update_dataset(ds)
+            return true
+        end
+    catch _
+        @warn "preparation step of: $(string(id)) failed"
         return false
     end        
 end

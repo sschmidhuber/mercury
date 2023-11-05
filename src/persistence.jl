@@ -116,8 +116,8 @@ function promote_dataset(id::UUID)
         throw(DomainError(id |> string, "Invalid ID, DataSet not found"))
     end
 
-    if ds.stage != scanned
-        throw(DomainError(ds.stage, "Invalid stage, \"scanned\" expected"))            
+    if ds.stage != prepared
+        throw(DomainError(ds.stage, "Invalid stage, \"prepared\" expected"))            
     end
 
     tmppath = joinpath(config["storage_dir"], "tmp", string(id))

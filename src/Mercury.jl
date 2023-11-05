@@ -7,16 +7,13 @@ module Mercury
 https://xkcd.com/949/
 
 TODOs:
-* remove / work around memory leaks
-* create secure context to support share and clipboard APIs
-* copy and share download link
-* short dataset ID and copy dataset ID to clipboard
-* migrate from JSON to Serialization ? for storing flat file DB?
+* large dataset / file support (https://stackoverflow.com/questions/50121917/split-an-uploaded-file-into-multiple-chunks-using-javascript)
+* copy dataset ID to clipboard
+* migrate from JSON to SQLite
 * disable malware check more elegant
 * dispatch event to trigger toast message
 * manual delete, if no retention period is set
-* rewrite fonrend as SPA following modern JavaScript style
-* large dataset / file support (https://stackoverflow.com/questions/50121917/split-an-uploaded-file-into-multiple-chunks-using-javascript)
+* rewrite fonrend code in modern JavaScript style
 * search data sets, get hidden data sets by ID
 * write API tests for public / hidden flags
 * external access support (download)
