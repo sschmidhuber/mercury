@@ -5,8 +5,8 @@ import JSON.Writer
 A DataSet moves through different stages during its lifecycle:
 
         1. initial: dataset created
-        2. prepared: upload completed
-        3. scanned: malware scan completed with no findings
+        2. scanned: malware scan completed with no findings
+        3. prepared: DataSet preprocessing completed successfully
         4. available: DataSet can be downloaded
         5. deleted: After retention time the DataSet will be marked as deleted
 """

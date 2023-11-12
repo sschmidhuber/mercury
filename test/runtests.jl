@@ -85,6 +85,7 @@ end
         id2 = res["id"]
         ds2 = Mercury.read_dataset(UUID(id2))
         @test ds1.label == "Text File"
+        Mercury.config["disable_malware_check"] = false
 
         # get status
         for _ in 1:2
