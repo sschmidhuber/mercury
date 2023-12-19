@@ -24,6 +24,7 @@ end
     clientconfig(req.context[:internal])
 end
 
+#=
 @post restricted("/datasets") function(req)
     # validate request
     @debug "validate request"
@@ -118,6 +119,81 @@ end
 
     return HTTP.Response(201, dataset |> dataset_to_dict |> JSON.json)
 end
+=#
+
+## Create a new DataSet
+@post restricted("/datasets") function(req)
+    request_body = Oxygen.json(req)
+    @show request_body
+
+    # valitate request
+    # file size, Data Set size, ...
+
+    
+    # create files
+    files = Vector{File}()
+    foreach(request_body.files) do file
+        try
+            mime = mime_from_path(file.path) |> isnothing ? MIME(file.type) : mime_from_path(file.path)
+            push!(files, File(uuid4(), basename(file.path), dirname(file.path), file.size, mime))
+        catch err
+            @warn "couldn't create file"
+            showerror(stderr, err)
+        end
+    end
+
+
+    # create DataSet
+    dsid = uuid4()
+
+    if isnothing(request_body.label)
+        if length(request_body.files) == 1
+            label = (request_body.files |> only).path |> basename
+        else
+            label = "Data Set $(today())"
+        end
+    end
+
+    local retention_time
+    try
+        retention_time = parse(Int, request_body.retention_time)
+    catch err
+        @warn "couldn't parse \"retention_time\""
+        showerror(stderr, err)
+        retention_time = config["retention"]["default"]
+    end
+
+    local hidden
+    try
+        hidden = request_body.hidden
+    catch err
+        @warn "couldn't parse \"hidden\""
+        showerror(stderr, err)
+        hidden = false
+    end
+
+    local public
+    try
+        public = request_body.public
+    catch err
+        @warn "couldn't parse \"public\""
+        showerror(stderr, err)
+        public = false
+    end
+
+    ds = add_dataset(dsid, label, retention_time, hidden, public, files)
+
+    @show ds
+
+    return HTTP.Response(201)
+end
+
+
+## Create a new file in an existing DataSet
+@post "/datasets/{id}/files" function(req, id)
+    return HTTP.Response(501, Dict("error" => "not implemented, yet", "detail" => "Adding files to existing DataSets is currently not implemented.") |> JSON.json)
+end
+
 
 
 @get "/datasets" function(req)

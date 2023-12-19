@@ -8,8 +8,9 @@ https://xkcd.com/949/
 
 TODOs:
 * large dataset / file support (https://stackoverflow.com/questions/50121917/split-an-uploaded-file-into-multiple-chunks-using-javascript)
-* copy dataset ID to clipboard
 * migrate from JSON to SQLite
+* migrate FE to htmx
+* copy dataset ID to clipboard
 * disable malware check more elegant
 * dispatch event to trigger toast message
 * manual delete, if no retention period is set

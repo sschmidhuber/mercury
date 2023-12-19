@@ -18,9 +18,9 @@ end
 
 Add a new Data Set
 """
-function add_dataset(id::UUID, label::String, retention_time::Int, hidden::Bool, public::Bool, filenames::Vector{String}, types::Vector{T} where T <: MIME, sizes::Vector{Int}, iobuffers)
-    ds = DataSet(id, strip(label), [], filenames, retention_time, hidden, public, types, sizes)
-    create_dataset(ds, iobuffers)
+function add_dataset(id::UUID, label::String, retention_time::Int, hidden::Bool, public::Bool, files::Vector{File})
+    ds = DataSet(id, strip(label), [], retention_time, hidden, public, files)
+    create_dataset(ds)
     return ds
 end
 
@@ -199,6 +199,7 @@ function clientconfig(internal=false)
         "retention_default" => config["retention"]["default"],
         "retention_min" => config["retention"]["min"],
         "retention_max" => config["retention"]["max"] == Inf ? "Infinity" : config["retention"]["max"],
+        "chunk_size" => config["network"]["chunk_size"],
         "filesize" => config["limits"]["filesize"],
         "filesize_f" => config["limits"]["filesize"] |> format_size,
         "filenumber_per_dataset" => config["limits"]["filenumber_per_dataset"],

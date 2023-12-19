@@ -80,11 +80,18 @@ async function upload(event) {
         oldAlert.remove()    
     }
 
-    formData = new FormData()
+    /*formData = new FormData()
     formData.append("label", label.value)
     formData.append("retention_time", retentionTime.retentionTime)
     formData.append("hidden", hiddenCheckbox.checked)
-    formData.append("public", publicCheckbox.checked)
+    formData.append("public", publicCheckbox.checked)*/
+    let requestBody = {
+        label: label.ariaValueMax,
+        retention_time: retentionTime.retentionTime,
+        hidden: hiddenCheckbox.checked,
+        public: publicCheckbox.checked,
+        files: []
+    }
     
     files = fileSelector.files
     if (files.length == 0) {
@@ -92,8 +99,14 @@ async function upload(event) {
         return
     }
     for (let i = 0; i < files.length; i++) {
-        filename = files[i].name
-        formData.append(filename, files[i])        
+        //filename = files[i].name
+        //formData.append(filename, files[i])
+        //formData.append(files[i].name, [files[i].type, files[i].size])
+        requestBody.files.push({
+            path: files[i].webkitRelativePath == "" ? files[i].name : files[i].webkitRelativePath,
+            type: files[i].type,
+            size: files[i].size
+        })
     }
     newUpload.hidden = true
     let uploadStatusElement = document.createElement("upload-status");
@@ -101,7 +114,18 @@ async function upload(event) {
     uploadStatus.append(uploadStatusElement);
     uploadStatus.hidden = false
     resCode = null
-    resBody = await fetch('/datasets', {method: "POST", body: formData})
+    /*resBody = await fetch('/datasets', {method: "POST", body: formData})
+    .then((response) => {
+        resCode = response.status
+        if (resCode != 500) {
+            return response.json()
+        } else {
+            null
+        }
+    })
+    .then((data) => data)*/
+    console.log(requestBody);
+    resBody = await fetch('/datasets', {method: "POST", body: JSON.stringify(requestBody)})
     .then((response) => {
         resCode = response.status
         if (resCode != 500) {
