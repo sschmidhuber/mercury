@@ -95,3 +95,13 @@ function dataset_to_dict(ds::DataSet)::Dict
         "download_url" => download_url
     )
 end
+
+
+"""
+    storage_size(ds::DataSet)
+
+Returns the storage size of all files of a DataSet in bytes. Even if not all files or chunks were downloaded, yet.
+"""
+function storage_size(ds::DataSet)
+    [file.size for file=ds.files] |> sum
+end

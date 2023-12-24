@@ -45,6 +45,14 @@ using Test, UUIDs, HTTP, JSON
     @test_throws DomainError Mercury.update_dataset(ds1)
 end
 
+@testset "Common Functions" begin
+    file1 = Mercury.File(uuid4(), "File 1", "", 1105637, MIME("image/jpeg"))
+    file2 = Mercury.File(uuid4(), "File 2", "", 9323, MIME("text/csv"))
+    ds1 = Mercury.DataSet(uuid4(), "DataSet 1", ["Test Data"], 48, false, false, [file1, file2])
+
+    @test Mercury.storage_size(ds1) == file1.size + file2.size
+end
+
 #=@testset "API" begin
     try
         middleware = [Mercury.ip_segmentation]

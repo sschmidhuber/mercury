@@ -124,21 +124,41 @@ end
 ## Create a new DataSet
 @post restricted("/datasets") function(req)
     request_body = Oxygen.json(req)
-    @show request_body
-
-    # valitate request
-    # file size, Data Set size, ...
-
     
     # create files
     files = Vector{File}()
     foreach(request_body.files) do file
         try
             mime = mime_from_path(file.path) |> isnothing ? MIME(file.type) : mime_from_path(file.path)
-            push!(files, File(uuid4(), basename(file.path), dirname(file.path), file.size, mime))
+            file = File(uuid4(), basename(file.path), dirname(file.path), file.size, mime)
+            
+            # file validations
+            if file.size > config["limits"]["filesize"]
+                return HTTP.Response(422, Dict("error" => "file size exceeds limit", "detail" => "file size exceeds limit of $(config["limits"]["filesize"] |> format_size)") |> JSON.json)
+            end
+
+            if isnothing(file.name) || isempty(file.name) || contains(file.name, '/')
+                HTTP.Response(422, Dict("error" => "invalid request content", "detail" => "file name missing") |> JSON.json)
+            end
+
+            if Sys.iswindows()
+                if ['/', '<', '>', '\\', ':', '"', '|', '?', '*'] .∈ file.name |> sum != 0
+                    HTTP.Response(422, Dict("error" => "invalid request content", "detail" => "file name contains character not allowed on Windows systems") |> JSON.json)
+                end
+                if ['<', '>', ':', '"', '|', '?', '*'] .∈ file.directory |> sum != 0
+                    HTTP.Response(422, Dict("error" => "invalid request content", "detail" => "directory name contains character not allowed on Windows systems") |> JSON.json)
+                end
+            else
+                if '/' ∈ file.name
+                    HTTP.Response(422, Dict("error" => "invalid request content", "detail" => "file name contains not allowed character '/'") |> JSON.json)
+                end
+            end
+            push!(files, file)
         catch err
             @warn "couldn't create file"
             showerror(stderr, err)
+
+            return HTTP.Response(422, Dict("error" => "invalid request content", "detail" => "failed to create file") |> JSON.json)
         end
     end
 
@@ -181,16 +201,42 @@ end
         public = false
     end
 
+
+    # dataset validations
+    if retention_time < config["retention"]["min"] || retention_time > config["retention"]["max"]
+        return HTTP.Response(400, Dict("error" => "invalid request", "detail" => "retention time: $retention_time, out of bounds ($(config["retenion"]["min"])-$(config["retention"]["max"]))") |> JSON.json)
+    end
+
+    if length(files) > config["limits"]["filenumber_per_dataset"]
+        return HTTP.Response(413, Dict("error" => "dataset exceeds max file number", "detail" => "dataset exceeds max file number of $(config["limits"]["filenumber_per_dataset"])") |> JSON.json)
+    end
+
+    if count_ds() >= config["limits"]["datasetnumber"]
+        return HTTP.Response(507, Dict("error" => "maximum number of datasets exceeded", "detail" => "limit of $(config["limits"]["datasetnumber"]) datasets exceeded") |> JSON.json)
+    end
+
+    total_size = map(x -> x.size, files) |> sum
+    if total_size > config["limits"]["datasetsize"]
+        return HTTP.Response(413, Dict("error" => "dataset exceeds size limit", "detail" => "dataset exceeds size limit of $(config["limits"]["datasetsize"] |> format_size)") |> JSON.json)
+    end 
+    if total_size > available_storage()
+        return HTTP.Response(507, Dict("error" => "storage limit exceeded", "detail" => "storage limit of $(config["limits"]["storage"] |> format_size) exceeded") |> JSON.json)
+    end
+
+
     ds = add_dataset(dsid, label, retention_time, hidden, public, files)
-
-    @show ds
-
-    return HTTP.Response(201)
+    return HTTP.Response(201, ds |> JSON.json)
 end
 
 
 ## Create a new file in an existing DataSet
 @post "/datasets/{id}/files" function(req, id)
+    return HTTP.Response(501, Dict("error" => "not implemented, yet", "detail" => "Adding files to existing DataSets is currently not implemented.") |> JSON.json)
+end
+
+
+## Upload a file respectively a chunk of a file
+@put "/datasets/{dsid}/files/{fid}/{chunk}" function(req, dsid, fid, chunk)
     return HTTP.Response(501, Dict("error" => "not implemented, yet", "detail" => "Adding files to existing DataSets is currently not implemented.") |> JSON.json)
 end
 

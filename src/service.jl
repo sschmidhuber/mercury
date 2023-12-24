@@ -137,7 +137,7 @@ Return available storage in bytes.
 """
 function available_storage()
     ds = read_datasets()
-    used_storage = map(d -> sum(d.sizes), ds) |> sum
+    used_storage = map(d -> storage_size(d), ds) |> sum
     min(diskstat(config["storage_dir"]).available, config["limits"]["storage"] - used_storage)
 end
 
