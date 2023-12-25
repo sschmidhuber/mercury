@@ -42,7 +42,7 @@ publicCheckbox.addEventListener("click", publicVisibilityWarning);
 hiddenCheckbox.addEventListener("click", publicVisibilityWarning);
 fileSelector.addEventListener("input", publicVisibilityWarning);
 fileSelector.addEventListener("input", resetNoFilesWarning);
-fileSelector.addEventListener("change", () => {console.log(fileSelector.files)});
+//fileSelector.addEventListener("change", () => {console.log(fileSelector.files)});
 
 //functions
 function resetNoFilesWarning(event) {
@@ -85,7 +85,7 @@ async function upload(event) {
     formData.append("retention_time", retentionTime.retentionTime)
     formData.append("hidden", hiddenCheckbox.checked)
     formData.append("public", publicCheckbox.checked)*/
-    let requestBody = {
+    let reqBody = {
         label: label.ariaValueMax,
         retention_time: retentionTime.retentionTime,
         hidden: hiddenCheckbox.checked,
@@ -99,10 +99,7 @@ async function upload(event) {
         return
     }
     for (let i = 0; i < files.length; i++) {
-        //filename = files[i].name
-        //formData.append(filename, files[i])
-        //formData.append(files[i].name, [files[i].type, files[i].size])
-        requestBody.files.push({
+        reqBody.files.push({
             path: files[i].webkitRelativePath == "" ? files[i].name : files[i].webkitRelativePath,
             type: files[i].type,
             size: files[i].size
@@ -113,19 +110,9 @@ async function upload(event) {
     uploadStatusElement.setAttribute("state", "initial");
     uploadStatus.append(uploadStatusElement);
     uploadStatus.hidden = false
+    console.log(files);
     resCode = null
-    /*resBody = await fetch('/datasets', {method: "POST", body: formData})
-    .then((response) => {
-        resCode = response.status
-        if (resCode != 500) {
-            return response.json()
-        } else {
-            null
-        }
-    })
-    .then((data) => data)*/
-    console.log(requestBody);
-    resBody = await fetch('/datasets', {method: "POST", body: JSON.stringify(requestBody)})
+    resBody = await fetch('/datasets', {method: "POST", body: JSON.stringify(reqBody)})
     .then((response) => {
         resCode = response.status
         if (resCode != 500) {
@@ -135,8 +122,45 @@ async function upload(event) {
         }
     })
     .then((data) => data)
+
+    console.log(resBody);
+    let dsid = resBody.id;
+
+    for (const file of files) {        
+        let fid = null;
+        let chunks_received = null;
+        let chunks_expected = null;
+        for (const element of resBody.files) {
+            if (element.directory == "" && element.name == file.name || element.directory !== "" && element.directory + "/" + element.name === file.webkitRelativePath) {
+                fid = element.id;
+                chunks_received = element.chunks_received;
+                chunks_expected = element.chunks_total;
+                break;
+            }
+        }
+
+        // upload file chunks
+        if (file.size <= sessionStorage.chunk_size) {
+            formData = new FormData()
+            formData.append(file.name, file)
+            responseCode = null
+            responseBody = await fetch(`/datasets/${dsid}/files/${fid}/1`, { method: "PUT", body: formData })
+                .then((response) => {
+                    responseCode = response.status
+                    if (resCode != 500) {
+                        return response.json()
+                    } else {
+                        null
+                    }
+                })
+                .then((data) => data)
+                console.log(responseBody);
+        } else if (file.size > sessionStorage.chunk_size) {
+            console.log("not implemented, yet");
+        }
+    }
     
-    if (resCode == 201) {
+    /*if (resCode == 201) {
         uploadStatusElement.setAttribute("state", "uploaded");
         uploadStatusElement.setAttribute("dataSetID", resBody.id);
         let datasetElement = document.createElement("dataset-element");
@@ -148,5 +172,5 @@ async function upload(event) {
     } else {
         uploadStatusElement.setAttribute("state", "failed");
         uploadStatusElement.setAttribute("error", resBody.detail)
-    }
+    }*/
 }

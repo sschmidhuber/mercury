@@ -237,7 +237,7 @@ end
 
 ## Upload a file respectively a chunk of a file
 @put "/datasets/{dsid}/files/{fid}/{chunk}" function(req, dsid, fid, chunk)
-    return HTTP.Response(501, Dict("error" => "not implemented, yet", "detail" => "Adding files to existing DataSets is currently not implemented.") |> JSON.json)
+    return HTTP.Response(501, Dict("error" => "not implemented, yet", "detail" => "Adding files to new DataSets is currently not implemented.") |> JSON.json)
 end
 
 
