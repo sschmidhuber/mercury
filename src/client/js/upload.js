@@ -147,16 +147,29 @@ async function upload(event) {
             responseBody = await fetch(`/datasets/${dsid}/files/${fid + 1}/1`, { method: "PUT", body: formData })
                 .then((response) => {
                     responseCode = response.status
-                    if (resCode != 500) {
-                        return response.json()
-                    } else {
-                        null
+                    if (responseCode != 200) {
+                        console.log(response);
+                        return;
                     }
                 })
                 .then((data) => data)
                 console.log(responseBody);
         } else if (file.size > sessionStorage.chunk_size) {
-            console.log("not implemented, yet");
+            for (let chunk = 1; chunk <= chunks_expected; chunk++) {
+                start = (chunk - 1) * sessionStorage.chunk_size;
+                end = chunk * sessionStorage.chunk_size > file.size ? file.size : chunk * sessionStorage.chunk_size
+                formData = new FormData();
+                formData.append(file.name, file.slice(start, end))
+                responseCode = null
+                responseBody = await fetch(`/datasets/${dsid}/files/${fid + 1}/${chunk}`, { method: "PUT", body: formData })
+                .then((response) => {
+                    responseCode = response.status
+                    if (responseCode != 200) {
+                        console.log(response);
+                        return;
+                    }
+                })
+            }
         }
 
         fid++;

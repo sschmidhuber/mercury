@@ -233,6 +233,8 @@ function add_chunk(dsid::UUID, fid::Int, chunk::Int, blob::AbstractArray)::Nothi
     update_dataset(ds)
 
     # TODO: propagate DataSet to next stage if all uploads are completed
+
+    return nothing
 end
 
 

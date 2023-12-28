@@ -78,6 +78,7 @@ function store_chunk(ds::DataSet, fid::Int, chunk::Int, blob::AbstractArray)::No
         @error "File missing: $path, can't store new chunk"
         throw(DomainError(path, "file missing"))
     elseif chunk == 1
+        mkpath(dirname(path))
         open(path,"w") do file
             write(file, blob)
         end
@@ -138,10 +139,8 @@ function update_dataset(ds::DataSet)
     lock(dslock)
     try
         if haskey(datasets, ds.id)
-            if !isequal(datasets[ds.id],ds)
-                datasets[ds.id] = ds
-                storeds()                
-            end
+            datasets[ds.id] = ds
+            storeds()
         else
             throw(DomainError(ds.id |> string, "Invalid ID, DataSet not found"))
         end
