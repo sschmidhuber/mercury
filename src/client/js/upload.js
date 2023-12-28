@@ -87,7 +87,7 @@ async function upload(event) {
     formData.append("public", publicCheckbox.checked)*/
     let reqBody = {
         label: label.ariaValueMax,
-        retention_time: retentionTime.retentionTime,
+        retention_time: "48", //retentionTime.retentionTime,
         hidden: hiddenCheckbox.checked,
         public: publicCheckbox.checked,
         files: []
@@ -125,26 +125,26 @@ async function upload(event) {
 
     console.log(resBody);
     let dsid = resBody.id;
+    let fid = 0;
 
-    for (const file of files) {        
-        let fid = null;
-        let chunks_received = null;
-        let chunks_expected = null;
-        for (const element of resBody.files) {
+    for (const file of files) {
+        let chunks_received = resBody.files[fid].chunks_received;
+        let chunks_expected = resBody.files[fid].chunks_total;
+        
+        /*for (const element of resBody.files) {
             if (element.directory == "" && element.name == file.name || element.directory !== "" && element.directory + "/" + element.name === file.webkitRelativePath) {
-                fid = element.id;
                 chunks_received = element.chunks_received;
                 chunks_expected = element.chunks_total;
                 break;
             }
-        }
+        }*/
 
         // upload file chunks
         if (file.size <= sessionStorage.chunk_size) {
             formData = new FormData()
             formData.append(file.name, file)
             responseCode = null
-            responseBody = await fetch(`/datasets/${dsid}/files/${fid}/1`, { method: "PUT", body: formData })
+            responseBody = await fetch(`/datasets/${dsid}/files/${fid + 1}/1`, { method: "PUT", body: formData })
                 .then((response) => {
                     responseCode = response.status
                     if (resCode != 500) {
@@ -158,6 +158,8 @@ async function upload(event) {
         } else if (file.size > sessionStorage.chunk_size) {
             console.log("not implemented, yet");
         }
+
+        fid++;
     }
     
     /*if (resCode == 201) {

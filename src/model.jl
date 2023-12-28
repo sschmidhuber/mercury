@@ -6,7 +6,6 @@ import JSON.Writer
     A file within a DataSet
 """
 mutable struct File
-    id::UUID
     name::String
     directory::String
     size::Int   # file size in bytes
@@ -17,18 +16,17 @@ mutable struct File
     timestamp_uploaded::Union{DateTime, Nothing}
 end
 
-File(id, name, directory, size, type) = begin
+File(name, directory, size, type) = begin
     # calculate number of chunks
     chunk_size = config["network"]["chunk_size"]
     chunks_full = size / chunk_size |> floor |> Int
     chunks_total = size % chunk_size == 0 ? chunks_full : chunks_full += 1
 
-    File(id, name, directory, size, type, chunks_total, 0, now(), nothing)
+    File(name, directory, size, type, chunks_total, 0, now(), nothing)
 end
 
 File(dict::Dict) = begin
     File(
-        UUID(dict["id"]),
         dict["name"],
         dict["directory"],
         dict["size"],
@@ -42,7 +40,6 @@ end
 
 
 function isequal(x::File, y::File)
-    x.id == y.id &&
     x.name == y.name &&
     x.directory == y.directory &&
     x.size == y.size &&

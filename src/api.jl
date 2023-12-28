@@ -130,7 +130,7 @@ end
     foreach(request_body.files) do file
         try
             mime = mime_from_path(file.path) |> isnothing ? MIME(file.type) : mime_from_path(file.path)
-            file = File(uuid4(), basename(file.path), dirname(file.path), file.size, mime)
+            file = File(basename(file.path), dirname(file.path), file.size, mime)
             
             # file validations
             if file.size > config["limits"]["filesize"]
@@ -235,9 +235,28 @@ end
 end
 
 
-## Upload a file respectively a chunk of a file
+## Upload a chunk of data of an existing file of some DataSet
 @put "/datasets/{dsid}/files/{fid}/{chunk}" function(req, dsid, fid, chunk)
-    return HTTP.Response(501, Dict("error" => "not implemented, yet", "detail" => "Adding files to new DataSets is currently not implemented.") |> JSON.json)
+    try
+        content = HTTP.parse_multipart_form(req)
+        if content |> isnothing
+            return HTTP.Response(422, Dict("error" => "invalid request content", "detail" => "parsing multipart form failed") |> JSON.json)
+        end
+        
+        blob = (content |> only).data.data
+        add_chunk(UUID(dsid), parse(Int, fid), parse(Int, chunk), blob)
+    catch err
+        if err isa DomainError
+            return HTTP.Response(422, Dict("error" => "invalid request content", "detail" => "failed to process chunk") |> JSON.json)
+        else
+            @warn "couldn't process chunk $chunk of file: $fid of dataset: $dsid"
+            showerror(stderr, err)
+
+            return HTTP.Response(500, Dict("error" => "internal server error", "detail" => "failed to process chunk") |> JSON.json)
+        end
+    end
+    
+    return HTTP.Response(200)
 end
 
 

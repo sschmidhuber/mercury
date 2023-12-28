@@ -68,6 +68,30 @@ end
 
 
 """
+    store_chunk(ds::DataSet, fid::Int, chunk::Int, blob::AbstractArray)::Nothing
+
+Stores a chunk of a file to the filesystem.
+"""
+function store_chunk(ds::DataSet, fid::Int, chunk::Int, blob::AbstractArray)::Nothing
+    path = joinpath(config["storage_dir"], "tmp", string(ds.id), ds.files[fid].directory, ds.files[fid].name)
+    if chunk > 1 && !ispath(path)
+        @error "File missing: $path, can't store new chunk"
+        throw(DomainError(path, "file missing"))
+    elseif chunk == 1
+        open(path,"w") do file
+            write(file, blob)
+        end
+    else
+        open(path, "a") do file
+            write(file, blob)
+        end
+    end
+
+    return nothing
+end
+
+
+"""
     read_dataset(id::UUID)::Union{DataSet,Nothing}
 
 Return DataSet with given ID or nothing, if the ID was not found.

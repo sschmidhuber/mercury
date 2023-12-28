@@ -189,6 +189,54 @@ end
 
 
 """
+    add_chunk(dsid::UUID, fid::Int, chunk::Int, blob::AbstractArray)::Nothing
+
+Add a new chunk of a file to a DataSet. Throws a DomainError if any input validation fails.
+"""
+function add_chunk(dsid::UUID, fid::Int, chunk::Int, blob::AbstractArray)::Nothing
+    ds = read_dataset(dsid)
+    
+    # validations
+    if isnothing(ds)
+        @warn "Dataset: $dsid not found, can't add new chunk"
+        throw(DomainError(dsid, "no DataSet with given ID found"))
+    end
+    if ds.files |> length < fid
+        @warn "File: $fid of DataSet $dsid not found, can't add new chunk"
+        throw(DomainError(fid, "no File with given ID found"))
+    end
+    if ds.files[fid].chunks_received + 1 != chunk || ds.files[fid].chunks_total < chunk
+        @warn "Unexpected chunk: $chunk of file $fid of DataSet $dsid, can't add new chunk"
+        throw(DomainError(fid, "unexpected chunk"))
+    end
+    expected_chunk_size = if ds.files[fid].chunks_total > chunk
+        config["network"]["chunk_size"]
+    else
+        # last or only chunk
+        ds.files[fid].size - (chunk - 1) * config["network"]["chunk_size"]
+    end
+    if length(blob) != expected_chunk_size
+        @warn "Unexpected chunk size: $(length(blob)) (expected: $expected_chunk_size) of file $fid of DataSet $dsid, can't add new chunk"
+        throw(DomainError(length(blob), "unexpected chunk size"))
+    end
+
+    try
+        store_chunk(ds, fid, chunk, blob)
+    catch err
+        rethrow(err)
+    end
+
+    ds.files[fid].chunks_received += 1
+    if ds.files[fid].chunks_total == ds.files[fid].chunks_received
+        ds.files[fid].timestamp_uploaded = now()        
+    end
+    update_dataset(ds)
+
+    # TODO: propagate DataSet to next stage if all uploads are completed
+end
+
+
+"""
     clientconfig(internal=false)
 
 Returns configuration for the web client.
