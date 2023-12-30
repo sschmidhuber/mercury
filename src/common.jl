@@ -69,8 +69,8 @@ Export a dataset object into dict type and format fields to display on client si
 function dataset_to_dict(ds::DataSet)::Dict
     size_total = storage_size(ds)
     time_left = ds.timestamp + Hour(ds.retention)
-    download_extension = length(ds.filenames) == 1 && dirname(ds.filenames[1]) == "" ? extension_from_mime(ds.types[1]) : ".zip"
-    download_filename = length(ds.files) == 1 && ds.files[1].directory == "" ? ds.filens[1].name : ds.label * ".zip"
+    download_extension = length(ds.files) == 1 && ds.files[1].directory |> isempty ? extension_from_mime(ds.files[1].type) : ".zip"
+    download_filename = length(ds.files) == 1 && ds.files[1].directory |> isempty ? ds.files[1].name : "$(ds.label).zip"
     download_url = (ds.public ? config["network"]["external_url"] : config["network"]["internal_url"]) * "/datasets/$(ds.id)"
 
     Dict(
@@ -80,9 +80,9 @@ function dataset_to_dict(ds::DataSet)::Dict
         "hidden" => ds.hidden,
         "tags" => ds.tags,
         "stage" => ds.stage,
-        #"files" => ds.filenames,
-        #"types" => ds.types,
-        #"sizes" => ds.sizes,
+        "files" => map(file -> joinpath(file.directory, file.name), ds.files),
+        "types" => map(file -> file.type, ds.files),
+        "sizes" => map(file -> file.size, ds.files),
         "size_total" => size_total,
         "size_total_f" => size_total |> format_size,
         "timestamp" => ds.timestamp,

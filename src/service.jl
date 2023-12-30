@@ -81,7 +81,7 @@ end
 """
     prepare(id::UUID)
 
-Preprocess DataSet, and set stage to "prepared" before it can be promoted for download.
+Preprocess DataSet and set stage to "prepared" before it can be promoted for download.
 Return true if preparation was executed successfully, othewise return false.
 """
 function prepare(id::UUID)::Bool
@@ -91,7 +91,7 @@ function prepare(id::UUID)::Bool
             @warn "no DataSet found corresponding to ID: $id"
             return false
         else
-            #TODO: add DataSet validation here
+            #TODO: add DataSet validation, create icons/thumbnails, QR code,...
             ds.stage = prepared
             ds.stagechange = now()
             update_dataset(ds)
@@ -192,8 +192,9 @@ end
     add_chunk(dsid::UUID, fid::Int, chunk::Int, blob::AbstractArray)::Nothing
 
 Add a new chunk of a file to a DataSet. Throws a DomainError if any input validation fails.
+Returns the upload progress of the DataSet and the currently uploaded file.
 """
-function add_chunk(dsid::UUID, fid::Int, chunk::Int, blob::AbstractArray)::Nothing
+function add_chunk(dsid::UUID, fid::Int, chunk::Int, blob::AbstractArray)::NamedTuple
     ds = read_dataset(dsid)
     
     # validations
@@ -231,12 +232,25 @@ function add_chunk(dsid::UUID, fid::Int, chunk::Int, blob::AbstractArray)::Nothi
         ds.files[fid].timestamp_uploaded = now()        
     end
     update_dataset(ds)
+    progress = upload_progress(ds, fid)
+    
+    if progress.completed
+        @info "upload completed, trigger further processing"
+        Threads.@spawn process_dataset(ds.id)
+    end
 
-    # TODO: propagate DataSet to next stage if all uploads are completed
-
-    return nothing
+    return progress
 end
 
+
+function upload_progress(ds, fid)
+    ds_chunks_total = map(file -> file.chunks_total, ds.files) |> sum
+    ds_chunks_received = map(file -> file.chunks_received, ds.files) |> sum
+    f_chunks_total = ds.files[fid].chunks_total
+    f_chunks_received = ds.files[fid].chunks_received
+
+    return (progress_dataset=Int(round(ds_chunks_received/ds_chunks_total * 100, digits=0)), file=joinpath(ds.files[fid].directory, ds.files[fid].name), progress_file=Int(round(f_chunks_received/f_chunks_total * 100, digits=0)), completed=ds_chunks_received==ds_chunks_total)
+end
 
 """
     clientconfig(internal=false)

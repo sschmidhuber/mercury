@@ -153,9 +153,10 @@ end
 """
     promote_dataset(id::UUID)
 
-Prepare a scanned data set for download and move from "tmp" to "live" storage layer.
+Promote a scanned data set for download and move from "tmp" to "live" storage layer.
 """
 function promote_dataset(id::UUID)
+    @info "promote dataset: $id"
     local ds
     if haskey(datasets, id)
         ds = datasets[id]
@@ -171,10 +172,12 @@ function promote_dataset(id::UUID)
     livepath = joinpath(config["storage_dir"], "live", string(id))
     mkpath(livepath)
 
-    if length(ds.filenames) == 1 && dirname(ds.filenames[1]) == "" # check if single file and not a within a directory
-        mv(joinpath(tmppath, ds.filenames[1]), joinpath(livepath, ds.filenames[1]))
+    if length(ds.files) == 1 && ds.files[1].directory == "" # check if single file and not a within a directory
+        @info "move single file"
+        mv(joinpath(tmppath, ds.files[1].name), joinpath(livepath, ds.files[1].name))
     else
-        run(Cmd(`zip -0 -q $(ds.label).zip $(ds.filenames)`, dir=tmppath))
+        @info "zip and move multiple files"
+        run(Cmd(`zip -0 -q $(ds.label).zip $(map(file -> joinpath(file.directory, file.name), ds.files))`, dir=tmppath))
         mv(joinpath(tmppath, "$(ds.label).zip"), joinpath(livepath, "$(ds.label).zip"))
     end
 

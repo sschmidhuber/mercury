@@ -237,6 +237,7 @@ end
 
 ## Upload a chunk of data of an existing file of some DataSet
 @put "/datasets/{dsid}/files/{fid}/{chunk}" function(req, dsid, fid, chunk)
+    local progress
     try
         content = HTTP.parse_multipart_form(req)
         if content |> isnothing
@@ -244,7 +245,7 @@ end
         end
         
         blob = (content |> only).data.data
-        add_chunk(UUID(dsid), parse(Int, fid), parse(Int, chunk), blob)
+        progress = add_chunk(UUID(dsid), parse(Int, fid), parse(Int, chunk), blob)
     catch err
         if err isa DomainError
             return HTTP.Response(422, Dict("error" => "invalid request content", "detail" => "failed to process chunk") |> JSON.json)
@@ -256,7 +257,7 @@ end
         end
     end
     
-    return HTTP.Response(200)
+    return HTTP.Response(200, progress |> JSON.json)
 end
 
 

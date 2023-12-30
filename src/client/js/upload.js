@@ -17,6 +17,9 @@ const uploadDataset = document.querySelector("#uploadDataset")
 const checkMalware = document.querySelector("#checkMalware")
 const prepareDataset = document.querySelector("#prepareDataset")
 const infoPanel = document.querySelector("#infoPanel")
+const uploadProgressDataset = document.querySelector("#uploadProgressDataset")
+const uploadFile = document.querySelector("#uploadFile")
+const uploadProgressFile = document.querySelector("#uploadProgressFile")
 
 
 // init
@@ -62,6 +65,13 @@ function publicVisibilityWarning(event) {
         return
     }
 }
+
+function updateProgress(progressDataset, progressFile, filename) {
+    uploadProgressDataset.textContent = progressDataset;
+    uploadFile.textContent = filename;
+    uploadProgressFile.textContent = progressFile;
+}
+
 
 function directoryMode(event) {
     if (directoryCheckbox.checked == true) {
@@ -131,14 +141,6 @@ async function upload(event) {
         let chunks_received = resBody.files[fid].chunks_received;
         let chunks_expected = resBody.files[fid].chunks_total;
         
-        /*for (const element of resBody.files) {
-            if (element.directory == "" && element.name == file.name || element.directory !== "" && element.directory + "/" + element.name === file.webkitRelativePath) {
-                chunks_received = element.chunks_received;
-                chunks_expected = element.chunks_total;
-                break;
-            }
-        }*/
-
         // upload file chunks
         if (file.size <= sessionStorage.chunk_size) {
             formData = new FormData()
@@ -147,13 +149,12 @@ async function upload(event) {
             responseBody = await fetch(`/datasets/${dsid}/files/${fid + 1}/1`, { method: "PUT", body: formData })
                 .then((response) => {
                     responseCode = response.status
-                    if (responseCode != 200) {
-                        console.log(response);
-                        return;
+                    if (responseCode != 500) {
+                        return response.json()
                     }
                 })
-                .then((data) => data)
-                console.log(responseBody);
+                .then((data) => data);
+                updateProgress(responseBody.progress_dataset, responseBody.progress_file, responseBody.file);
         } else if (file.size > sessionStorage.chunk_size) {
             for (let chunk = 1; chunk <= chunks_expected; chunk++) {
                 start = (chunk - 1) * sessionStorage.chunk_size;
@@ -164,11 +165,12 @@ async function upload(event) {
                 responseBody = await fetch(`/datasets/${dsid}/files/${fid + 1}/${chunk}`, { method: "PUT", body: formData })
                 .then((response) => {
                     responseCode = response.status
-                    if (responseCode != 200) {
-                        console.log(response);
-                        return;
+                    if (responseCode != 500) {
+                        return response.json()
                     }
                 })
+                .then((data) => data);
+                updateProgress(responseBody.progress_dataset, responseBody.progress_file, responseBody.file);
             }
         }
 
