@@ -7,19 +7,18 @@ module Mercury
 https://xkcd.com/949/
 
 TODOs:
-* large dataset / file support (https://stackoverflow.com/questions/50121917/split-an-uploaded-file-into-multiple-chunks-using-javascript)
-* migrate from JSON to SQLite
+* large dataset / file support
 * migrate FE to htmx
+* add files to existing dataset
+* migrate from JSON to SQLite
 * copy dataset ID to clipboard
 * disable malware check more elegant
 * dispatch event to trigger toast message
 * manual delete, if no retention period is set
-* rewrite fonrend code in modern JavaScript style
 * search data sets, get hidden data sets by ID
 * write API tests for public / hidden flags
 * external access support (download)
 * external access support (upload)
-* add files to existing dataset
 * push notifications about newly uploaded DataSets (push API)
 * video player
 * image viewer
