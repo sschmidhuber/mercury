@@ -154,15 +154,15 @@ function status(internal)
         count_ds = filter(x -> x.stage == available, ds) |> length
         count_files = @chain ds begin
             filter(x -> x.stage == available, _)
-            map(d -> length(d.filenames), _)
-            sum(_)
+            map(x -> length(x.files), _)
+            sum
         end
     else
         count_ds = filter(x -> x.stage == available && x.public, ds) |> length
         count_files = @chain ds begin
             filter(x -> x.stage == available && x.public, _)
-            map(d -> length(d.filenames), _)
-            sum(_)
+            map(x -> length(x.files), _)
+            sum
         end        
     end
 
@@ -173,7 +173,7 @@ function status(internal)
     )
 
     if internal
-        used_storage = map(d -> sum(d.sizes), ds) |> sum
+        used_storage = map(d -> sum(map(f -> f.size, d.files)), ds) |> sum
         available_storage = min(diskstat(config["storage_dir"]).available, config["limits"]["storage"] - used_storage) |> Int
         total_storage = available_storage + used_storage
         used_relative = used_storage / total_storage * 100 |> round |> Int
@@ -235,7 +235,7 @@ function add_chunk(dsid::UUID, fid::Int, chunk::Int, blob::AbstractArray)::Named
     progress = upload_progress(ds, fid)
     
     if progress.completed
-        @info "upload completed, trigger further processing"
+        @debug "upload completed, trigger further processing"
         Threads.@spawn process_dataset(ds.id)
     end
 
@@ -313,7 +313,7 @@ function get_download_uri(id::UUID)
     end
 
     directory  = "/live/" * string(id) * "/"
-    filename = length(ds.filenames) == 1 && dirname(ds.filenames[1]) == "" ? ds.filenames |> only : ds.label * ".zip"
+    filename = length(ds.files) == 1 && ds.files[1].directory |> isempty ? ds.files[1].name : ds.label * ".zip"
 
     return directory * filename
 end

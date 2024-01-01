@@ -10,6 +10,7 @@ TODOs:
 * large dataset / file support
 * migrate FE to htmx
 * add files to existing dataset
+* resume uploads
 * migrate from JSON to SQLite
 * copy dataset ID to clipboard
 * disable malware check more elegant

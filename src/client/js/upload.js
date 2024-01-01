@@ -11,7 +11,7 @@ const directoryCheckbox = document.querySelector("#directoryCheckbox")
 const fileSelectorLabel = document.querySelector("#fileSelectorLabel")
 const fileSelector = document.querySelector("#fileSelector")
 const uploadButton = document.querySelector("#uploadButton")
- 
+
 const uploadStatus = document.querySelector("#uploadStatus")
 const uploadDataset = document.querySelector("#uploadDataset")
 const checkMalware = document.querySelector("#checkMalware")
@@ -24,7 +24,6 @@ const uploadProgressFile = document.querySelector("#uploadProgressFile")
 
 // init
 uploadLink.classList.add("active")
-
 const alert = (message, type, id) => {
     const wrapper = document.createElement('div')
     wrapper.innerHTML = [
@@ -36,6 +35,7 @@ const alert = (message, type, id) => {
   
     alertPlaceholder.append(wrapper)
   }
+let wakeLock = null;
 
 
 // listeners
@@ -45,7 +45,12 @@ publicCheckbox.addEventListener("click", publicVisibilityWarning);
 hiddenCheckbox.addEventListener("click", publicVisibilityWarning);
 fileSelector.addEventListener("input", publicVisibilityWarning);
 fileSelector.addEventListener("input", resetNoFilesWarning);
-//fileSelector.addEventListener("change", () => {console.log(fileSelector.files)});
+
+document.addEventListener("visibilitychange", async () => {
+    if (wakeLock !== null && document.visibilityState === "visible") {
+      wakeLock = await navigator.wakeLock.request("screen");
+    }
+  });
 
 //functions
 function resetNoFilesWarning(event) {
@@ -97,7 +102,7 @@ async function upload(event) {
     formData.append("public", publicCheckbox.checked)*/
     let reqBody = {
         label: label.ariaValueMax,
-        retention_time: "48", //retentionTime.retentionTime,
+        retention_time: retentionTime.retentionTime,
         hidden: hiddenCheckbox.checked,
         public: publicCheckbox.checked,
         files: []
@@ -116,9 +121,6 @@ async function upload(event) {
         })
     }
     newUpload.hidden = true
-    let uploadStatusElement = document.createElement("upload-status");
-    uploadStatusElement.setAttribute("state", "initial");
-    uploadStatus.append(uploadStatusElement);
     uploadStatus.hidden = false
     console.log(files);
     resCode = null
@@ -133,9 +135,9 @@ async function upload(event) {
     })
     .then((data) => data)
 
-    console.log(resBody);
     let dsid = resBody.id;
     let fid = 0;
+    wakeLock = await navigator.wakeLock.request("screen");
 
     for (const file of files) {
         let chunks_received = resBody.files[fid].chunks_received;
@@ -176,18 +178,8 @@ async function upload(event) {
 
         fid++;
     }
-    
-    /*if (resCode == 201) {
-        uploadStatusElement.setAttribute("state", "uploaded");
-        uploadStatusElement.setAttribute("dataSetID", resBody.id);
-        let datasetElement = document.createElement("dataset-element");
-        datasetElement.setAttribute("dataset", JSON.stringify(resBody));
-        uploadStatus.append(datasetElement)
-    } else if (resCode == 500) {
-        uploadStatusElement.setAttribute("state", "failed");
-        uploadStatusElement.setAttribute("error", "Failed to process file upload.")       
-    } else {
-        uploadStatusElement.setAttribute("state", "failed");
-        uploadStatusElement.setAttribute("error", resBody.detail)
-    }*/
+
+    wakeLock.release().then(() => {
+        wakeLock = null;
+      });
 }
