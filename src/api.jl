@@ -172,6 +172,8 @@ end
         else
             label = "Data Set $(today())"
         end
+    else
+        label = request_body.label
     end
 
     local retention_time

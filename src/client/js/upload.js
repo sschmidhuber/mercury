@@ -95,13 +95,8 @@ async function upload(event) {
         oldAlert.remove()    
     }
 
-    /*formData = new FormData()
-    formData.append("label", label.value)
-    formData.append("retention_time", retentionTime.retentionTime)
-    formData.append("hidden", hiddenCheckbox.checked)
-    formData.append("public", publicCheckbox.checked)*/
     let reqBody = {
-        label: label.ariaValueMax,
+        label: label.value,
         retention_time: retentionTime.retentionTime,
         hidden: hiddenCheckbox.checked,
         public: publicCheckbox.checked,
