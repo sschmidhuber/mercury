@@ -13,6 +13,7 @@ TODOs:
     * Data Set Names
     * Firefox Bug
     * Large File Bug
+    * wrong file size (2 GiB), but to be verified
 * migrate FE to htmx
 * add files to existing dataset
 * resume uploads
