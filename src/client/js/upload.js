@@ -132,7 +132,12 @@ async function upload(event) {
 
     let dsid = resBody.id;
     let fid = 0;
-    wakeLock = await navigator.wakeLock.request("screen");
+    try {
+        wakeLock = await navigator.wakeLock.request("screen");
+        console.log("wakelock obtained");
+    } catch (error) {
+        console.log(`${error.name}, ${error.message}`);
+    }
 
     for (const file of files) {
         let chunks_received = resBody.files[fid].chunks_received;
@@ -174,7 +179,10 @@ async function upload(event) {
         fid++;
     }
 
-    wakeLock.release().then(() => {
-        wakeLock = null;
-      });
+    if (wakeLock !== null) {
+        wakeLock.release().then(() => {
+            wakeLock = null;
+        });
+        console.log("wakeLock released")
+    }
 }

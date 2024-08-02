@@ -9,8 +9,7 @@ https://xkcd.com/949/
 TODOs:
 * large dataset / file support
 * DEFECTS:
-    * Data Set Names
-    * Firefox Bug
+    * Data Set Names (can'T reproduce on DEV)
     * Large File Bug
     * wrong file size (2 GiB), but to be verified
 * migrate FE to htmx

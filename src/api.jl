@@ -265,7 +265,7 @@ end
 
 
 @get "/datasets" function(req)
-    available_datasets(req.context[:internal])
+    available_ds = available_datasets(req.context[:internal])
 end
 
 

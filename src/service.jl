@@ -295,7 +295,7 @@ function available_datasets(internal=false)
     if isempty(ds)
         return []
     else
-        return dataset_to_dict.(ds)
+        dataset_to_dict.(ds)
     end
 end
 
