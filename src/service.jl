@@ -333,7 +333,7 @@ end
 """
     cleanup()
 
-Periodically delete datasets if retention time is exceeded.
+Periodically delete datasets if retention time is exceeded or uploads failed.
 """
 function cleanup()
     while true
@@ -342,19 +342,22 @@ function cleanup()
 
         foreach(ds) do d
             if d.stage == available
+                # soft delete DataSets which exceeded their retention time
                 if d.timestamp + Hour(d.retention) < ts
                     @info "delete $(d.label), ID: $(d.id)"
                     delete_dataset(d.id)
                 end
             elseif d.stage == deleted
+                # hard delete DataSets which were already soft deleted
                 if d.stagechange + Hour(config["retention"]["purge"]) < ts
                     @info "permanently delete $(d.label), ID: $(d.id)"
                     delete_dataset(d.id, hard=true, dbrecord=true)
                 end
-            elseif d.stage == initial || d.stage == scanned
+            elseif d.stage == initial || d.stage == scanned || d.stage == prepared
+                # hard delete DataSets wich got stuck in initial, scanned or prepared stage
                 if d.timestamp + Day(1) < ts
                     @info "remove from tmp layer: $(d.label), ID: $(d.id)"
-                    delete_dataset(d.id, hard=true)
+                    delete_dataset(d.id, hard=true, dbrecord=true)
                 end
             end
         end

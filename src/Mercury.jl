@@ -9,7 +9,6 @@ https://xkcd.com/949/
 TODOs:
 * large dataset / file support
 * DEFECTS:
-    * cleanup doesn't work
     * Data Set Names
     * Firefox Bug
     * Large File Bug
