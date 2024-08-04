@@ -38,27 +38,41 @@ function format_size(bytes::Int)::String
     if bytes < 1024
         size = "$bytes B"
     elseif bytes < 1024^2
-        bytes = round(bytes/1024) |> Int
-        size = "$bytes KiB"
+        rounded = round_sig(bytes/1024)
+        size = "$rounded KiB"
     elseif bytes < 1024^3
-        bytes = round(bytes/1024^2) |> Int
-        size = "$bytes MiB"
+        rounded = round_sig(bytes/1024^2)
+        size = "$rounded MiB"
     elseif bytes < 1024^4
-        bytes = round(bytes/1024^3) |> Int
-        size = "$bytes GiB"
+        rounded = round_sig(bytes/1024^3)
+        size = "$rounded GiB"
     elseif bytes < 1024^5
-        bytes = round(bytes/1024^4) |> Int
-        size = "$bytes TiB"
+        rounded = round_sig(bytes/1024^4)
+        size = "$rounded TiB"
     elseif bytes < 1024^6
-        bytes = round(bytes/1024^5) |> Int
-        size = "$bytes PiB"
+        rounded = round_sig(bytes/1024^5)
+        size = "$rounded PiB"
+    elseif bytes/1024^6 < 100
+        rounded = round_sig(bytes/1024^6)
+        size = "$rounded EiB"
     else
-        bytes = round(bytes/1024^6) |> Int
-        size = "$bytes EiB"
+        rounded = round(Int, bytes/1024^6)
+        size = "$rounded EiB"
     end
 
     return size
 end
+
+
+"""
+    round_sig(x::Number)::String
+
+Returns the given number as string, rounded to 3 significant digits and without trailing zeros.
+"""
+function round_sig(x::Number)::String
+    @sprintf "%g" round(x, sigdigits=3)
+end
+
 
 """
     dataset_to_dict(ds::DataSet)::Dict
