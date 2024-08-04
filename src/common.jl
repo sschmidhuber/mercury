@@ -32,7 +32,7 @@ end
 
 Translates a given number of bytes into a easily human readable form of e.g. KiB, MiB, GiB,...
 """
-function format_size(bytes::Int)::String
+function format_size(bytes::Int128)::String
     local size
     
     if bytes < 1024
