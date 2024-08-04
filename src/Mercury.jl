@@ -10,6 +10,7 @@ TODOs:
 * large dataset / file support
 * DEFECTS:
     * Large File Bug
+* ensure packages are instantiated in correct versions, check how that works
 * migrate FE to htmx
 * add files to existing dataset
 * resume uploads

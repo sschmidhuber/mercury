@@ -8,7 +8,7 @@ import JSON.Writer
 mutable struct File
     name::String
     directory::String
-    size::Int   # file size in bytes
+    size::Int128   # file size in bytes
     type::MIME
     chunks_total::Int
     chunks_received::Int
