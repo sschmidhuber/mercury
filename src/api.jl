@@ -166,7 +166,8 @@ end
     # create DataSet
     dsid = uuid4()
 
-    if isnothing(request_body.label)
+    @show request_body.label
+    if isnothing(request_body.label) || isempty(request_body.label)
         if length(request_body.files) == 1
             label = (request_body.files |> only).path |> basename
         else
@@ -175,6 +176,8 @@ end
     else
         label = request_body.label
     end
+
+    @show request_body.label
 
     local retention_time
     try

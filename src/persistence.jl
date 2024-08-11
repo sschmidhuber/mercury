@@ -156,7 +156,7 @@ end
 Promote a scanned data set for download and move from "tmp" to "live" storage layer.
 """
 function promote_dataset(id::UUID)
-    @debug "promote dataset: $id"
+    @info "promote dataset: $id"
     local ds
     if haskey(datasets, id)
         ds = datasets[id]

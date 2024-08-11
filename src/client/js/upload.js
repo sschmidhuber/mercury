@@ -108,16 +108,32 @@ async function upload(event) {
         alert('Please select one or multiple files.', 'warning', 'noFilesWarning')
         return
     }
-    for (let i = 0; i < files.length; i++) {
-        reqBody.files.push({
-            path: files[i].webkitRelativePath == "" ? files[i].name : files[i].webkitRelativePath,
-            type: files[i].type,
-            size: files[i].size
-        })
+
+    // TODO: This is dirty and needs to be done better
+    // don't check for paths if webkitRelativePath is undefined (Fireforx for Android)
+    if (files[0].webkitRelativePath == undefined) {
+        // Firefox on Android
+        for (let i = 0; i < files.length; i++) {
+            reqBody.files.push({
+                path: files[i].name,
+                type: files[i].type,
+                size: files[i].size
+            })
+        }
+    } else {
+        // sane browsers
+        for (let i = 0; i < files.length; i++) {
+            reqBody.files.push({
+                path: files[i].webkitRelativePath == "" ? files[i].name : files[i].webkitRelativePath,
+                type: files[i].type,
+                size: files[i].size
+            })
+        }
     }
+    
     newUpload.hidden = true
     uploadStatus.hidden = false
-    console.log(files);
+    //console.log(files);
     resCode = null
     resBody = await fetch('/datasets', {method: "POST", body: JSON.stringify(reqBody)})
     .then((response) => {
@@ -130,6 +146,8 @@ async function upload(event) {
     })
     .then((data) => data)
 
+    //console.log(resBody)
+
     let dsid = resBody.id;
     let fid = 0;
     try {
@@ -138,6 +156,8 @@ async function upload(event) {
     } catch (error) {
         console.log(`${error.name}, ${error.message}`);
     }
+
+    //console.log(resBody.files[fid])
 
     for (const file of files) {
         let chunks_received = resBody.files[fid].chunks_received;
