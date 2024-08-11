@@ -173,11 +173,25 @@ function promote_dataset(id::UUID)
     mkpath(livepath)
 
     if length(ds.files) == 1 && ds.files[1].directory == "" # check if single file and not a within a directory
-        mv(joinpath(tmppath, ds.files[1].name), joinpath(livepath, ds.files[1].name))
+        try
+            @info "$id: move file to 'live' directory"
+            mv(joinpath(tmppath, ds.files[1].name), joinpath(livepath, ds.files[1].name))
+        catch e
+            showerror(stderr, e)
+            @warn "$id: failed to move file to 'live' directory"
+        end
     else
-        run(Cmd(`zip -0 -q $(ds.label).zip $(map(file -> joinpath(file.directory, file.name), ds.files))`, dir=tmppath))
-        mv(joinpath(tmppath, "$(ds.label).zip"), joinpath(livepath, "$(ds.label).zip"))
+        try
+            @info "$id: create archive for uploaded files"
+            run(Cmd(`zip -0 -q $(ds.label).zip $(map(file -> joinpath(file.directory, file.name), ds.files))`, dir=tmppath))
+            @info "$id: move archive to 'live' directory"
+            mv(joinpath(tmppath, "$(ds.label).zip"), joinpath(livepath, "$(ds.label).zip"))
+        catch e
+            showerror(stderr, e)
+            @warn "$id: failed to archive and move files to 'live' directory"
+        end
     end
+    @info "$id: DataSet moved to 'live' directory, successfully"
 
     lock(dslock)
     try

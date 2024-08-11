@@ -10,6 +10,7 @@ TODOs:
 * large dataset / file support
 * DEFECTS:
     * Large File Bug
+* Fix Tests use testunits integrated with VS Code
 * ensure packages are instantiated in correct versions, check how that works
 * migrate FE to htmx
 * add files to existing dataset
