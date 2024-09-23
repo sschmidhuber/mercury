@@ -5,8 +5,6 @@ module Mercury
 https://xkcd.com/949/
 
 TODOs:
-* Fix Tests use testunits integrated with VS Code
-* ensure packages are instantiated in correct versions, check how that works
 * migrate FE to htmx
 * add files to existing dataset
 * resume uploads
@@ -18,7 +16,6 @@ TODOs:
 * manual delete, if no retention period is set
 * search data sets, get hidden data sets by ID
 * write API tests for public / hidden flags
-* external access support (download)
 * external access support (upload)
 * push notifications about newly uploaded DataSets (push API)
 * video player
@@ -28,6 +25,7 @@ TODOs:
 * client side upload limit
 * don't allow public data sets if the option is not set in config
 * sort datasets
+* implement Meryury client in Julia and use for API tests
 * link sharing
 * use LOAD_PATH in future if parts are to be split into modules
 * icons / thumbnails
@@ -38,7 +36,8 @@ TODOs:
 * load more (pagination)
 * view images, videos, docuemnts, listen music of data sets
 * user info / welcome dialog
-* create setup script (load fonrend and backend dependencies)
+* create setup script (load fontend and backend dependencies)
+    * ensure packages are instantiated in correct versions, check how that works
 * create storage init function (create tmp/live directories)
 * bucket / directories to seperate data sets and access to buckets / directories
 * version support for uploading same data set multiple times

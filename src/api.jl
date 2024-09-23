@@ -123,7 +123,14 @@ end
 
 ## Create a new DataSet
 @post restricted("/datasets") function(req)
-    request_body = Oxygen.json(req)
+    local request_body
+    try
+        request_body = Oxygen.json(req)
+    catch e
+        showerror(stderr, e)
+        return HTTP.Response(422, Dict("error" => "invalid request content", "detail" => "failed to parse JSON request body") |> JSON.json)
+    end
+    
     
     # create files
     files = Vector{File}()

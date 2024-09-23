@@ -53,7 +53,11 @@ end
     @test Mercury.storage_size(ds1) == file1.size + file2.size
 end
 
-#=@testset "API" begin
+#=
+
+To make this work the a mercury client in julia needs to be implemented, using the new API
+
+@testset "API" begin
     try
         middleware = [Mercury.ip_segmentation]
         Mercury.serve(middleware=middleware, host="127.0.0.1", port=8123, async=true, access_log=nothing)
@@ -68,7 +72,9 @@ end
             "public" => "false",
             "file" => HTTP.Multipart("\$pécial ¢haräcterß.txt", open(joinpath("..","test", "data", "\$pécial ¢haräcterß.txt")), "text/plain")
             ]
+        @show data
         body = HTTP.Form(data)
+        @show body
         res = HTTP.request("POST", "http://127.0.0.1:8123/datasets", request_header, body)
 
         res = res.body |> String |> JSON.parse
@@ -109,6 +115,7 @@ end
         Mercury.stop_webserver()
     end
 end=#
+
 
 # clean up ENV variable
 delete!(ENV, "MODE")
