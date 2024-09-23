@@ -1,5 +1,3 @@
-#! /usr/bin/env -S julia -t auto
-
 module Mercury
 
 #=
@@ -7,9 +5,6 @@ module Mercury
 https://xkcd.com/949/
 
 TODOs:
-* large dataset / file support
-* DEFECTS:
-    * Large File Bug
 * Fix Tests use testunits integrated with VS Code
 * ensure packages are instantiated in correct versions, check how that works
 * migrate FE to htmx
@@ -18,6 +13,7 @@ TODOs:
 * migrate from JSON to SQLite
 * copy dataset ID to clipboard
 * disable malware check more elegant
+* load test / large file test
 * dispatch event to trigger toast message
 * manual delete, if no retention period is set
 * search data sets, get hidden data sets by ID
@@ -51,14 +47,24 @@ TODOs:
 =#
 
 
+using Chain
+using Dates
+using HTTP
+using IPNets
+using JSON
+using LoggingExtras
+using MIMEs
+using Mmap
+using Oxygen
+using Printf
+using Sockets
+using SystemStats
+using TOML
+using UUIDs
+
 cd(@__DIR__)
-using Pkg
-Pkg.activate("..")
-Pkg.instantiate()
-using Dates, UUIDs, MIMEs, TOML, Chain, JSON, HTTP, Oxygen, Mmap, LoggingExtras, Sockets, IPNets, SystemStats, Printf
 
 const config = TOML.parsefile("../config/config.toml")
-
 
 include("model.jl")
 include("persistence.jl")
