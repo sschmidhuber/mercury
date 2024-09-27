@@ -10,6 +10,8 @@ TODOs:
 * resume uploads
 * migrate from JSON to SQLite
 * copy dataset ID to clipboard
+* print function
+* use Oxygen CRON for scheduled jobs
 * disable malware check more elegant
 * load test / large file test
 * dispatch event to trigger toast message
@@ -54,6 +56,7 @@ using JSON
 using LoggingExtras
 using MIMEs
 using Mmap
+using Mustache
 using Oxygen
 using Printf
 using Sockets
@@ -70,6 +73,7 @@ include("persistence.jl")
 include("service.jl")
 include("common.jl")
 include("middleware.jl")
+include("view.jl")
 include("api.jl")
 
 
@@ -105,13 +109,13 @@ function start_webserver(async=true)
     middleware = [ip_segmentation]
 
     if Threads.nthreads() == 1
-        if config["disable_access_log"]
+        if config["disable_access_log"] && !isinteractive()
             serve(middleware=middleware, host=host, port=port, access_log=nothing, async=async)
         else
             serve(middleware=middleware, host=host, port=port, async=async)
         end
     else
-        if config["disable_access_log"]
+        if config["disable_access_log"] && !isinteractive()
             serveparallel(middleware=middleware, host=host, port=port, access_log=nothing, async=async)
         else
             serveparallel(middleware=middleware, host=host, port=port, async=async)

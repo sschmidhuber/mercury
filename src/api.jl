@@ -1,12 +1,18 @@
 ## router
 
 restricted = router("", tags=["restricted"], middleware=[internal])
+rest = router("/rest", tags=["REST API"])
 
 
 ## endpoints
 
 @get "/" function()
-    redirect("client/index.html")
+    redirect("rest/")
+end
+
+@get rest("") function(req)
+    status = get_storage_status(req.context[:internal])
+    render_initial_page(status)
 end
 
 
@@ -15,14 +21,21 @@ end
 end
 
 
-@get "/status" function(req)
-    status(req.context[:internal])
+@get "/storage-status" function(req)
+    get_storage_status(req.context[:internal])
+end
+
+@get rest("/storage-status") function(req)
+    status = get_storage_status(req.context[:internal])
+    render_storage_status(status)
 end
 
 
 @get "/config" function(req)
     clientconfig(req.context[:internal])
 end
+
+#@get rest("/rest/status")
 
 #=
 @post restricted("/datasets") function(req)

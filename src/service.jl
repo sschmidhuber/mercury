@@ -145,11 +145,11 @@ end
 """
     status()
 
-Return system status.
+Return mercury's system status, in terms of stored datasets and available storage.
 """
-function status(internal)
+function get_storage_status(internal)::StorageStatus
     ds = read_datasets()
-    local count_ds, count_files
+
     if internal
         count_ds = filter(x -> x.stage == available, ds) |> length
         count_files = @chain ds begin
@@ -157,34 +157,23 @@ function status(internal)
             map(x -> length(x.files), _)
             sum
         end
+        used_storage = map(d -> sum(map(f -> f.size, d.files)), ds) |> sum
+        available_storage = min(diskstat(config["storage_dir"]).available, config["limits"]["storage"] - used_storage) |> Int
+        total_storage = available_storage + used_storage
+        used_relative = used_storage / total_storage * 100 |> round |> Int
+
+        status = StorageStatus(count_ds, count_files, format_size(used_storage), format_size(available_storage), format_size(total_storage), "$used_relative %")
     else
         count_ds = filter(x -> x.stage == available && x.public, ds) |> length
         count_files = @chain ds begin
             filter(x -> x.stage == available && x.public, _)
             map(x -> length(x.files), _)
             sum
-        end        
+        end 
+        status = StorageStatus(count_ds, count_files)
     end
 
-
-    dict = Dict{String, Any}(
-        "count_datasets" => count_ds,
-        "count_files" => count_files
-    )
-
-    if internal
-        used_storage = map(d -> sum(map(f -> f.size, d.files)), ds) |> sum
-        available_storage = min(diskstat(config["storage_dir"]).available, config["limits"]["storage"] - used_storage) |> Int
-        total_storage = available_storage + used_storage
-        used_relative = used_storage / total_storage * 100 |> round |> Int
-
-        dict["used_storage"] = format_size(used_storage)
-        dict["available_storage"] = format_size(available_storage)
-        dict["total_storage"] = format_size(total_storage)
-        dict["used_relative"] = "$used_relative %"
-    end
-
-    return dict
+    return status
 end
 
 

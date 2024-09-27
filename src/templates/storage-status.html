@@ -1,0 +1,8 @@
+<span>
+    <p style="display: inline-block; margin-right: 2em;" title="including hidden data sets">{{count_ds}} Data Sets</p>
+    <p style="display: inline-block; margin-right: 2em;" title="including files of hidden data sets">{{count_files}} Files</p>
+    <span ?hidden=${!this._internal}>
+      <p  class="d-none d-lg-inline-block" style="margin-right: 2em;" title="Used storage includes not yet cleand up files.">Total Storage: {{total_storage}} ({{used_relative}} used)</p>
+      <p class="d-none d-xl-inline-block">Free Storage: {{available_storage}}</p>
+    </span>
+  </span>

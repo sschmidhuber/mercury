@@ -25,7 +25,7 @@ internal_url = "https://localhost"
 external_url = "https://fileexchange.ddns.net"
 
 # files transferred over network are split into given chunk_size (in bytes)
-chunk_size = 524288
+chunk_size = 5000000
 
 
 [retention]

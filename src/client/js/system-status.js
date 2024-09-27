@@ -1,5 +1,5 @@
-import {html, css} from '../deps/lit-core.min.js';
-import {BootstrapElement} from '../deps/BootstrapElement.js';
+import {html, css} from '../client/deps/lit-core.min.js';
+import {BootstrapElement} from '../client/deps/BootstrapElement.js';
 
 class SystemStatus extends BootstrapElement {
   static properties = {
@@ -19,7 +19,7 @@ class SystemStatus extends BootstrapElement {
 
   async updateStatus() {
     var resCode = null
-    var resBody = await fetch("/status", {method: "GET"})
+    var resBody = await fetch("/storage-status", {method: "GET"})
     .then((response) => {
         resCode = response.status
         return response.json()
@@ -27,7 +27,7 @@ class SystemStatus extends BootstrapElement {
     .then((data) => data)
     
     if (resCode == 200) {
-        this._datasets = resBody.count_datasets
+        this._datasets = resBody.count_ds
         this._files = resBody.count_files
         if (resBody.hasOwnProperty("total_storage")) {
           this._totalStorage = resBody.total_storage

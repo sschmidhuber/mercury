@@ -147,3 +147,20 @@ end
 function JSON.Writer.lower(x::UUID)
     x |> string
 end
+
+
+"""
+SystemStatus represents the status Mercury at a given point in time.
+
+Some metrics are restricted and might be set to nothing.
+"""
+struct StorageStatus
+    count_ds::Int128
+    count_files::Int128
+    used_storage::Union{String,Nothing}
+    available_storage::Union{String,Nothing}
+    total_storage::Union{String,Nothing}
+    used_relative::Union{String,Nothing}
+end
+
+StorageStatus(count_ds, count_files) = StorageStatus(count_ds, count_files, nothing, nothing, nothing, nothing)
