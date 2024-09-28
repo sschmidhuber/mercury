@@ -143,11 +143,11 @@ end
 
 
 """
-    status()
+    storage_status(internal)::StorageStatus
 
 Return mercury's system status, in terms of stored datasets and available storage.
 """
-function get_storage_status(internal)::StorageStatus
+function storage_status(internal)::StorageStatus
     ds = read_datasets()
 
     if internal
@@ -264,12 +264,13 @@ end
 
 
 """
-    available_datasets(internal=false)
+    available_datasets(internal=false)::Union{Vector{DataSet},Nothing}
 
-Return status of available datasets. If private is set to true private and public data sets will be returned.
-If private=false (default) only public datasets will be returned.
+Return a Vector of all available datasets or nothing if no datasets are available.
+If internal is set to true private and public data sets will be returned.
+If internal=false (default) only public datasets will be returned.
 """
-function available_datasets(internal=false)
+function available_datasets(internal=false)::Union{Vector{DataSet},Nothing}
     ds = @chain read_datasets() begin
         map(d -> read_dataset(d.id), _)
         filter(d -> d.stage == available, _)
@@ -282,9 +283,9 @@ function available_datasets(internal=false)
     end
 
     if isempty(ds)
-        return []
+        return nothing
     else
-        dataset_to_dict.(ds)
+        ds
     end
 end
 

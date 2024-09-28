@@ -11,8 +11,9 @@ rest = router("/rest", tags=["REST API"])
 end
 
 @get rest("") function(req)
-    status = get_storage_status(req.context[:internal])
-    render_initial_page(status)
+    status = storage_status(req.context[:internal])
+    available_ds = available_datasets(req.context[:internal])
+    render_initial_page(status, available_ds)
 end
 
 
@@ -22,11 +23,11 @@ end
 
 
 @get "/storage-status" function(req)
-    get_storage_status(req.context[:internal])
+    storage_status(req.context[:internal])
 end
 
 @get rest("/storage-status") function(req)
-    status = get_storage_status(req.context[:internal])
+    status = storage_status(req.context[:internal])
     render_storage_status(status)
 end
 

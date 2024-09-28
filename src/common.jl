@@ -74,42 +74,6 @@ function round_sig(x::Number)::String
 end
 
 
-"""
-    dataset_to_dict(ds::DataSet)::Dict
-
-Export a dataset object into dict type and format fields to display on client side.
-
-"""
-function dataset_to_dict(ds::DataSet)::Dict
-    size_total = storage_size(ds)
-    time_left = ds.timestamp + Hour(ds.retention)
-    download_extension = length(ds.files) == 1 && ds.files[1].directory |> isempty ? extension_from_mime(ds.files[1].type) : ".zip"
-    download_filename = length(ds.files) == 1 && ds.files[1].directory |> isempty ? ds.files[1].name : "$(ds.label).zip"
-    download_url = (ds.public ? config["network"]["external_url"] : config["network"]["internal_url"]) * "/datasets/$(ds.id)"
-
-    Dict(
-        "id" => ds.id,
-        "label" => ds.label,
-        "public" => ds.public,
-        "hidden" => ds.hidden,
-        "tags" => ds.tags,
-        "stage" => ds.stage,
-        "files" => map(file -> joinpath(file.directory, file.name), ds.files),
-        "types" => map(file -> file.type, ds.files),
-        "sizes" => map(file -> file.size, ds.files),
-        "size_total" => size_total,
-        "size_total_f" => size_total |> format_size,
-        "timestamp" => ds.timestamp,
-        "retention_time" => ds.retention,
-        "time_left" => time_left,
-        "time_left_f" => time_left |> format_retention,
-        "downloads" => ds.downloads,
-        "download_extension" => download_extension,
-        "download_filename" => download_filename,
-        "download_url" => download_url
-    )
-end
-
 
 """
     storage_size(ds::DataSet)
