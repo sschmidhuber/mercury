@@ -18,6 +18,7 @@ struct DataSetView
     download_extension::String
     download_filename::String
     download_url::String
+    email_body::String
 end
 
 function DataSetView(ds::DataSet)
@@ -26,6 +27,7 @@ function DataSetView(ds::DataSet)
     download_extension = length(ds.files) == 1 && ds.files[1].directory |> isempty ? extension_from_mime(ds.files[1].type) : ".zip"
     download_filename = length(ds.files) == 1 && ds.files[1].directory |> isempty ? ds.files[1].name : "$(ds.label).zip"
     download_url = (ds.public ? config["network"]["external_url"] : config["network"]["internal_url"]) * "/datasets/$(ds.id)"
+    email_body = "Download Link: $(download_url)$(ds.public ? "" : "\n\nThe data set is only available within the internal network.")" |> HTTP.escape
 
     DataSetView(
         ds,
@@ -35,7 +37,8 @@ function DataSetView(ds::DataSet)
         format_retention(time_of_deletion),
         download_extension,
         download_filename,
-        download_url
+        download_url,
+        email_body
     )
 end
 

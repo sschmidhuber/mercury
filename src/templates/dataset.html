@@ -13,7 +13,7 @@
           Downloads: {{ds.downloads}}</p>
           <a class="btn btn-primary" href="/datasets/{{ds.id}}" download="{{download_filename}}">
             <img src="../client/icons/download.svg" style="padding-bottom: 0.2rem;"/>&nbsp;Download</a>
-          <a ?hidden=${webShareAPI} class="btn btn-secondary" href="mailto:?to=&subject=${this.dataset.label}&body=${emailBody}">
+          <a ?hidden=${webShareAPI} class="btn btn-secondary" href="mailto:?to=&subject={{ds.label}}&body={{email_body}}">
             <span> <img src="../client/icons/envelope.svg" style="padding-bottom: 0.2rem;"/> </span>
             <span class="d-none d-lg-inline-block">&nbsp;Send Link</span>
           </a>
