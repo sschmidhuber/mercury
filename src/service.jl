@@ -107,7 +107,9 @@ end
 """
     properties(id::UUID)
 
-Return properties of the data set associated to the given ID.
+**!!! deprecated !!!**
+
+Return properties of the data set associated with the given ID.
 """
 function properties(id::UUID)
     ds = read_dataset(id)
@@ -116,6 +118,21 @@ function properties(id::UUID)
     else
         return dataset_to_dict(ds)
     end    
+end
+
+
+"""
+    load_dataset(id::UUID)::Union{Nothing,DataSet}
+
+Return a corresponding DataSet or nothing if no DataSet with the given ID was found.
+"""
+function load_dataset(id::UUID)::Union{Nothing,DataSet}
+    ds = read_dataset(id)
+    if isnothing(ds)
+        return nothing
+    else
+        return ds
+    end  
 end
 
 
@@ -287,36 +304,6 @@ function available_datasets(internal=false)::Union{Vector{DataSet},Nothing}
     else
         ds
     end
-end
-
-
-"""
-    download_path(id::UUID)
-
-Return the path of the correspoonding download artefact associated to the given ID.
-Return nothing, if there is no data set corresponding to the given ID.
-"""
-function get_download_uri(id::UUID)
-    ds = read_dataset(id)
-    if isnothing(ds) || ds.stage != available
-        return nothing
-    end
-
-    directory  = "/live/" * string(id) * "/"
-    filename = length(ds.files) == 1 && ds.files[1].directory |> isempty ? ds.files[1].name : ds.label * ".zip"
-
-    return directory * filename
-end
-
-
-function increment_download_counter(id::UUID)
-    ds = read_dataset(id)
-    if isnothing(ds) || ds.stage != available
-        return nothing
-    end
-
-    ds.downloads += 1
-    update_dataset(ds)
 end
 
 

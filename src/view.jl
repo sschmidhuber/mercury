@@ -25,7 +25,7 @@ function DataSetView(ds::DataSet)
     count_files_f = "$(length(ds.files)) $(length(ds.files) == 1 ? "file" : "files")"
     time_of_deletion = ds.timestamp + Hour(ds.retention)
     download_extension = length(ds.files) == 1 && ds.files[1].directory |> isempty ? extension_from_mime(ds.files[1].type) : ".zip"
-    download_filename = length(ds.files) == 1 && ds.files[1].directory |> isempty ? ds.files[1].name : "$(ds.label).zip"
+    download_name = download_filename(ds)
     download_url = (ds.public ? config["network"]["external_url"] : config["network"]["internal_url"]) * "/datasets/$(ds.id)"
     email_body = "Download Link: $(download_url)$(ds.public ? "" : "\n\nThe data set is only available within the internal network.")" |> HTTP.escape
 
@@ -36,7 +36,7 @@ function DataSetView(ds::DataSet)
         count_files_f,
         format_retention(time_of_deletion),
         download_extension,
-        download_filename,
+        download_name,
         download_url,
         email_body
     )
@@ -48,11 +48,25 @@ end
 =#
 
 
+"""
+    render_initial_page(storage_status::StorageStatus, datasets::Union{Vector{DataSet},Nothing}, internal=false)
+
+"""
 function render_initial_page(storage_status::StorageStatus, datasets::Union{Vector{DataSet},Nothing}, internal=false)
     # load and render subsections
-    storage_status_tpl = Mustache.load("templates/storage-status.html")
-    storage_status_html = Mustache.render(storage_status_tpl, storage_status)
+    storage_status_html = render_storage_status(storage_status, internal)
+    ds_html = render_datasets(datasets, internal)
 
+    # join subsections together
+    index_tpl = Mustache.load("templates/index.html")
+    Mustache.render(index_tpl, storage_status=storage_status_html, ds=ds_html)
+end
+
+"""
+    render_datasets(datasets::Union{Vector{DataSet},Nothing}, internal=false)
+
+"""
+function render_datasets(datasets::Union{Vector{DataSet},Nothing}, internal=false)
     if isnothing(datasets)
         ds_html = "no visible Datasets available"
     else
@@ -61,9 +75,7 @@ function render_initial_page(storage_status::StorageStatus, datasets::Union{Vect
         ds_html = Mustache.render(ds_tpl, datasets=dataset_views)
     end
 
-    # join subsections together
-    index_tpl = Mustache.load("templates/index.html")
-    Mustache.render(index_tpl, storage_status=storage_status_html, ds=ds_html)
+    return ds_html
 end
 
 """

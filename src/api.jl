@@ -7,10 +7,10 @@ rest = router("/rest", tags=["REST API"])
 ## endpoints
 
 @get "/" function()
-    redirect("rest/")
+    redirect("index.html")
 end
 
-@get rest("") function(req)
+@get "/index.html" function(req)
     status = storage_status(req.context[:internal])
     available_ds = available_datasets(req.context[:internal])
     render_initial_page(status, available_ds)
@@ -300,22 +300,24 @@ end
     end
 
     # check availability
-    props = properties(dsid)
-    if isnothing(props) || props["stage"] != available
+    ds::DataSet = load_dataset(dsid)
+    if isnothing(ds) || ds.stage != available
         sleep(5)
         return HTTP.Response(404, Dict("error" => "resource not found", "detail" => "there is no data set available with ID: $id") |> JSON.json)
     end
 
     # check authorization
-    if !props["public"] && !req.context[:internal]
+    if !ds.public && !req.context[:internal]
         sleep(5)
         return HTTP.Response(403, Dict("error" => "access denied", "detail" => "access to this data set is restricted") |> JSON.json)
     end
 
-    uri = get_download_uri(dsid)
-    increment_download_counter(dsid)
+    uri = download_uri(ds)
+    download_name = download_filename(ds)
+    ds.downloads += 1
+    update_dataset(ds)
 
-    return HTTP.Response(200, ["X-Accel-Redirect" => uri, "Content-Disposition" => "attachment; filename=\"$(props["download_filename"])\""])
+    return HTTP.Response(200, ["X-Accel-Redirect" => uri, "Content-Disposition" => "attachment; filename=\"$download_name)\""])
 end
 
 

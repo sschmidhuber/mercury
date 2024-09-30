@@ -83,3 +83,26 @@ Returns the storage size of all files of a DataSet in bytes. Even if not all fil
 function storage_size(ds::DataSet)
     [file.size for file=ds.files] |> sum
 end
+
+
+"""
+    download_uri(ds::DataSet)
+
+Return the URI of the given DataSet.
+"""
+function download_uri(ds::DataSet)
+    directory  = "/live/" * string(ds.id) * "/"
+    filename = length(ds.files) == 1 && ds.files[1].directory |> isempty ? ds.files[1].name : ds.label * ".zip"
+
+    return directory * filename
+end
+
+
+"""
+    download_filename(ds::DataSet)
+
+Returns the download file name of a given DataSet.
+"""
+function download_filename(ds::DataSet)::String
+    length(ds.files) == 1 && ds.files[1].directory |> isempty ? ds.files[1].name : "$(ds.label).zip"
+end

@@ -33,3 +33,10 @@ async function applyConfig() {
         document.querySelector("#navbarsMain").classList.add("visually-hidden")
     }
 }
+
+function copyLink(element, download_url) {
+    navigator.clipboard.writeText(download_url);
+    let img = element.querySelector("#clipboard-icon")
+    img.src = "assets/icons/check-circle.svg"
+    setTimeout(() => {img.src = "assets/icons/clipboard.svg"}, 3000)
+  }

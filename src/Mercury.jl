@@ -6,19 +6,19 @@ https://xkcd.com/949/
 
 TODOs:
 * migrate FE to htmx
-* add files to existing dataset
-* resume uploads
 * migrate from JSON to SQLite
+* add files to existing dataset
+* external access support (upload)
+* search data sets, get hidden data sets by ID
+* use Oxygen CRON for scheduled jobs
 * copy dataset ID to clipboard
 * print function
-* use Oxygen CRON for scheduled jobs
+* resume uploads
 * disable malware check more elegant
 * load test / large file test
 * dispatch event to trigger toast message
 * manual delete, if no retention period is set
-* search data sets, get hidden data sets by ID
 * write API tests for public / hidden flags
-* external access support (upload)
 * push notifications about newly uploaded DataSets (push API)
 * video player
 * image viewer

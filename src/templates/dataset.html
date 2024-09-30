@@ -12,13 +12,13 @@
           Size: {{size_total_f}} ({{count_files_f}})<br>
           Downloads: {{ds.downloads}}</p>
           <a class="btn btn-primary" href="/datasets/{{ds.id}}" download="{{download_filename}}">
-            <img src="../client/icons/download.svg" style="padding-bottom: 0.2rem;"/>&nbsp;Download</a>
-          <a ?hidden=${webShareAPI} class="btn btn-secondary" href="mailto:?to=&subject={{ds.label}}&body={{email_body}}">
-            <span> <img src="../client/icons/envelope.svg" style="padding-bottom: 0.2rem;"/> </span>
+            <img src="assets/icons/download.svg" style="padding-bottom: 0.2rem;"/>&nbsp;Download</a>
+          <a class="btn btn-secondary" href="mailto:?to=&subject={{ds.label}}&body={{email_body}}">
+            <span> <img src="assets/icons/envelope.svg" style="padding-bottom: 0.2rem;"/> </span>
             <span class="d-none d-lg-inline-block">&nbsp;Send Link</span>
           </a>
-          <a ?hidden=${!isSecureContext} @click=${this.copyLink} class="btn btn-secondary">
-            <span> <img id="clipboard-icon" src="../client/icons/clipboard.svg" style="padding-bottom: 0.2rem;"/> </span>
+          <a ?hidden=${!isSecureContext} hx-on:click="copyLink(this,'{{download_url}}'); console.log('clicked')" class="btn btn-secondary">
+            <span> <img id="clipboard-icon" src="assets/icons/clipboard.svg" style="padding-bottom: 0.2rem;"/> </span>
             <span class="d-none d-lg-inline-block">&nbsp;Copy Link</span>
           </a>
           <!-- not implemented yet
