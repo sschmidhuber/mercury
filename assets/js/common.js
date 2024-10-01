@@ -1,9 +1,11 @@
 // init
+hideElements()
 if (sessionStorage.getItem("internal") == null) {
     loadConfig()
 } else {
     applyConfig()
 }
+
 
 
 // functions
@@ -27,10 +29,12 @@ async function loadConfig() {
     }
 }
 
-async function applyConfig() {
-    if (sessionStorage.getItem("internal") === "false") {
-        document.querySelector(".navbar-toggler").classList.add("visually-hidden")
-        document.querySelector("#navbarsMain").classList.add("visually-hidden")
+/*
+Hide elements which only work in a secure context, if there is no secure context.
+*/
+function hideElements() {
+    if (!isSecureContext) {
+        document.querySelectorAll(".copy-link").forEach(el => el.classList.add("visually-hidden"))
     }
 }
 

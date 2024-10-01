@@ -17,7 +17,7 @@
             <span> <img src="assets/icons/envelope.svg" style="padding-bottom: 0.2rem;"/> </span>
             <span class="d-none d-lg-inline-block">&nbsp;Send Link</span>
           </a>
-          <a ?hidden=${!isSecureContext} hx-on:click="copyLink(this,'{{download_url}}'); console.log('clicked')" class="btn btn-secondary">
+          <a hx-on:click="copyLink(this,'{{download_url}}')" class="btn btn-secondary copy-link">
             <span> <img id="clipboard-icon" src="assets/icons/clipboard.svg" style="padding-bottom: 0.2rem;"/> </span>
             <span class="d-none d-lg-inline-block">&nbsp;Copy Link</span>
           </a>

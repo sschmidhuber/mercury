@@ -6,6 +6,11 @@ https://xkcd.com/949/
 
 TODOs:
 * migrate FE to htmx
+    * upload link ausblenden bei external
+    * copy link ausblenden bei unsecure context
+    * Upload
+    * Navigation with hx-boost
+    * Cleanup
 * migrate from JSON to SQLite
 * add files to existing dataset
 * external access support (upload)

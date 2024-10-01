@@ -57,9 +57,11 @@ function render_initial_page(storage_status::StorageStatus, datasets::Union{Vect
     storage_status_html = render_storage_status(storage_status, internal)
     ds_html = render_datasets(datasets, internal)
 
+    @show internal
+    external = internal ? "" : "visually-hidden"
     # join subsections together
     index_tpl = Mustache.load("templates/index.html")
-    Mustache.render(index_tpl, storage_status=storage_status_html, ds=ds_html)
+    Mustache.render(index_tpl, storage_status=storage_status_html, ds=ds_html, external=external)
 end
 
 """

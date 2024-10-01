@@ -4,7 +4,7 @@ restricted = router("", tags=["restricted"], middleware=[internal])
 rest = router("/rest", tags=["REST API"])
 
 
-## endpoints
+## top level navigation
 
 @get "/" function()
     redirect("index.html")
@@ -13,9 +13,15 @@ end
 @get "/index.html" function(req)
     status = storage_status(req.context[:internal])
     available_ds = available_datasets(req.context[:internal])
-    render_initial_page(status, available_ds)
+    render_initial_page(status, available_ds, req.context[:internal])
 end
 
+@get "/upload.html" function(req)
+    
+end
+
+
+## API endpoints
 
 @get "/health" function()
     healthcheck()
