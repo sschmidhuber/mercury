@@ -1,11 +1,7 @@
 // init
-hideElements()
 if (sessionStorage.getItem("internal") == null) {
     loadConfig()
-} else {
-    applyConfig()
 }
-
 
 
 // functions
@@ -29,18 +25,10 @@ async function loadConfig() {
     }
 }
 
-/*
-Hide elements which only work in a secure context, if there is no secure context.
-*/
-function hideElements() {
-    if (!isSecureContext) {
-        document.querySelectorAll(".copy-link").forEach(el => el.classList.add("visually-hidden"))
-    }
-}
 
 function copyLink(element, download_url) {
     navigator.clipboard.writeText(download_url);
     let img = element.querySelector("#clipboard-icon")
     img.src = "assets/icons/check-circle.svg"
-    setTimeout(() => {img.src = "assets/icons/clipboard.svg"}, 3000)
-  }
+    setTimeout(() => { img.src = "assets/icons/clipboard.svg" }, 3000)
+}

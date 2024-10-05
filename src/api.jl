@@ -1,6 +1,6 @@
 ## router
 
-restricted = router("", tags=["restricted"], middleware=[internal])
+restricted = router("", tags=["Restricted"], middleware=[internal])
 rest = router("/rest", tags=["REST API"])
 
 
@@ -13,11 +13,11 @@ end
 @get "/index.html" function(req)
     status = storage_status(req.context[:internal])
     available_ds = available_datasets(req.context[:internal])
-    render_initial_page(status, available_ds, req.context[:internal])
+    render_datasets_page(status, available_ds, req.context[:internal])
 end
 
 @get "/upload.html" function(req)
-    
+    render_upload_page(req.context[:internal])
 end
 
 
@@ -42,110 +42,32 @@ end
     clientconfig(req.context[:internal])
 end
 
-#@get rest("/rest/status")
 
-#=
-@post restricted("/datasets") function(req)
-    # validate request
-    @debug "validate request"
-    contenttype = HTTP.headers(req, "Content-Type")
-    if isempty(contenttype) || !contains(contenttype[1], "multipart/form-data")
-        return HTTP.Response(415, Dict("error" => "invalid Content-Type", "detail" => "Expect \"multipart/form-data\"") |> JSON.json)
+## Create a new DataSet REST API
+
+@post rest("/datasets") function (req, middleware=[internal])
+    local request_body
+    try
+        request_body = formdata(req)
+        #request_body = Oxygen.json(req)
+    catch e
+        showerror(stderr, e)
+        return HTTP.Response(422, Dict("error" => "invalid request content", "detail" => "failed to parse JSON request body") |> JSON.json)
     end
 
-    content = HTTP.parse_multipart_form(req)
-    if content |> isnothing
-        return HTTP.Response(422, Dict("error" => "invalid request content", "detail" => "parsing multipart form failed") |> JSON.json)
-    end
-
-    @debug "process request"
-    # process request
-    id = uuid4()
-    filenames = map(c -> c.filename, content[5:end])
-    types = map(c -> c.contenttype |> MIME, content[5:end])
-    iobuffers = map(c -> c.data, content[5:end])
-    sizes = map(io -> bytesavailable(io), iobuffers)
-
+    @show request_body
     
-    label = content[1].data.data |> String
-    if label == ""
-        if length(filenames) == 1
-            label = filenames[1]
-        else
-            label = "Data Set $(today())"
-        end
-    end
-
-    local retention_time
-    try
-        retention_time = parse(Int, content[2].data.data |> String)
-    catch err
-        @warn "couldn't parse \"retention_time\""
-        showerror(stderr, err)
-        retention_time = config["retention"]["default"]
-    end
-
-    local hidden
-    try
-        hidden = parse(Bool, content[3].data.data |> String)
-    catch err
-        @warn "couldn't parse \"hidden\""
-        showerror(stderr, err)
-        hidden = false
-    end
-
-    local public
-    try
-        public = parse(Bool, content[4].data.data |> String)
-    catch err
-        @warn "couldn't parse \"public\""
-        showerror(stderr, err)
-        public = false
-    end
-
-    # validate fields
-    if retention_time < config["retention"]["min"] || retention_time > config["retention"]["max"]
-        return HTTP.Response(400, Dict("error" => "invalid request", "detail" => "retention time: $retention_time, out of bounds ($(config["retenion"]["min"])-$(config["retention"]["max"]))") |> JSON.json)
-    end
-    if isempty(iobuffers)
-        return HTTP.Response(422, Dict("error" => "invalid request content", "detail" => "file missing") |> JSON.json)
-    end
-    if isempty(filenames) || filenames[1] == ""
-        return HTTP.Response(422, Dict("error" => "invalid request content", "detail" => "filename missing") |> JSON.json)
-    end
-    if length(filenames) > config["limits"]["filenumber_per_dataset"]
-        return HTTP.Response(413, Dict("error" => "dataset exceeds max file number", "detail" => "dataset exceeds max file number of $(config["limits"]["filenumber_per_dataset"])") |> JSON.json)
-    end
-    for i in eachindex(sizes)
-        if sizes[i] > config["limits"]["filesize"]
-            return HTTP.Response(413, Dict("error" => "file size exceeds limit", "detail" => "file size exceeds limit of $(config["limits"]["filesize"] |> format_size)") |> JSON.json)
-        end
-    end
-    if sum(sizes) > config["limits"]["datasetsize"]
-        return HTTP.Response(413, Dict("error" => "dataset exceeds size limit", "detail" => "dataset exceeds size limit of $(config["limits"]["datasetsize"] |> format_size)") |> JSON.json)
-    end
-    
-    if 1 + count_ds() > config["limits"]["datasetnumber"]
-        return HTTP.Response(507, Dict("error" => "maximum number of datasets exceeded", "detail" => "limit of $(config["limits"]["datasetnumber"]) datasets exceeded") |> JSON.json)
-    end
-    if sum(sizes) > available_storage()
-        return HTTP.Response(507, Dict("error" => "storage limit exceeded", "detail" => "storage limit of $(config["limits"]["storage"] |> format_size) exceeded") |> JSON.json)
-    end
-
-    # add new DataSet and trigger further processing
-    dataset = add_dataset(id, label, retention_time, hidden, public, filenames, types, sizes, iobuffers)
-    # Threads.@spawn  ##  @spawn lead to an memory leak, using async as workaround for now
-    @async process_dataset($id)
-
-    return HTTP.Response(201, dataset |> dataset_to_dict |> JSON.json)
+    #html("<div hx-swap-oob=\"true\" id=\"alertPlaceholder\">Not implemented, yet!</div>")
+    html("<div>Not implemented, yet!</div>")
 end
-=#
 
-## Create a new DataSet
-@post restricted("/datasets") function(req)
+## Create a new DataSet Data API
+#= inactive until needed
+@post "/datasets" function(req, middleware=[internal])
     local request_body
     try
         request_body = Oxygen.json(req)
+        @show request_body
     catch e
         showerror(stderr, e)
         return HTTP.Response(422, Dict("error" => "invalid request content", "detail" => "failed to parse JSON request body") |> JSON.json)
@@ -255,7 +177,7 @@ end
 
     ds = add_dataset(dsid, label, retention_time, hidden, public, files)
     return HTTP.Response(201, ds |> JSON.json)
-end
+end=#
 
 
 ## Create a new file in an existing DataSet
@@ -323,7 +245,7 @@ end
     ds.downloads += 1
     update_dataset(ds)
 
-    return HTTP.Response(200, ["X-Accel-Redirect" => uri, "Content-Disposition" => "attachment; filename=\"$download_name)\""])
+    return HTTP.Response(200, ["X-Accel-Redirect" => uri, "Content-Disposition" => "attachment; filename=\"$download_name\""])
 end
 
 

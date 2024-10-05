@@ -10,7 +10,9 @@
     </title>
     <link crossorigin="anonymous" href="assets/deps/bootstrap.min.css" rel="stylesheet"/>
     <script crossorigin="anonymous" defer="" src="assets/deps/bootstrap.bundle.min.js"></script>
-    <script crossorigin="anonymous" defer="" src="assets/js/common.js"></script>
+    <script defer src="assets/deps/htmx.min.js"></script>
+    <script defer src="assets/js/common.js"></script>
+    <script defer src="assets/js/upload.js"></script>
     <style>
         body {
             padding-bottom: 20px;
@@ -78,13 +80,15 @@
   </head>
   <body>
     <main>
-      <nav aria-label="Fourth navbar example" class="navbar fixed-top navbar-expand-md navbar-dark bg-dark" id="replace-nav">
+      <nav aria-label="Fourth navbar example" class="navbar fixed-top navbar-expand-md navbar-dark bg-dark"
+        id="replace-nav">
         <div class="container-fluid">
-          <img src="icons/file-exchange.png" width="40erm"/>
+          <img src="assets/icons/file-exchange.png" width="40erm" />
           <a class="navbar-brand" href="index.html" style="margin-left: 1em;">
             Mercury
           </a>
-          <button aria-controls="navbarsMain" aria-expanded="false" aria-label="Toggle navigation" class="navbar-toggler" data-bs-target="#navbarsMain" data-bs-toggle="collapse" type="button">
+          <button aria-controls="navbarsMain" aria-expanded="false" aria-label="Toggle navigation" class="navbar-toggler"
+            data-bs-target="#navbarsMain" data-bs-toggle="collapse" type="button">
             <span class="navbar-toggler-icon"></span>
           </button>
           <div class="collapse navbar-collapse" id="navbarsMain">
@@ -96,7 +100,7 @@
               </li>
               <li class="nav-item">
                 <a aria-current="page" class="nav-link active" href="upload.html" id="upload">
-                  Upload
+                  New / Upload
                 </a>
               </li>
             </ul>
@@ -107,66 +111,70 @@
         <div class="p-5 rounded">
           <div class="col-sm-8 mx-auto" id="newUpload">
             <h1 class="mb-4">
-              Upload
+              New / Upload
             </h1>
-            <div id="alertPlaceholder"></div>
-            <form>
-              <div>
-                <div class="mb-3">
-                  <label class="form-label" for="label">
-                    Label
-                  </label>
-                  <input id="label" name="label" type="text"/>
+            <div id="mainContent">
+              <div id="alertPlaceholder" hx-swap-oob="true"></div>
+              <form hx-post="/rest/datasets" hx-vals='js:{...getFiles()}'>
+                <div>
+                  <div class="mb-3">
+                    <label class="form-label" for="label">
+                      Label
+                    </label>
+                    <input id="label" name="label" type="text" />
+                  </div>
+                  <div class="mb-3">
+                    <label id="retentionTimeLabel" for="retentionTime" class="form-label">Retention time: 48 h</label>
+                    <input hx-on:input="updateRetentionTime(this)" name="retentionTime" type="range" class="form-range"
+                      min="1" step="1" max="720" id="retentionTimeInput" value=48>
+                  </div>
+                  <div class="mb-3">
+                    <input class="form-check-input" type="checkbox" id="publicCheckbox" name="public" value="true" />
+                    <label class="form-label" for="publicCheckbox"
+                      title="A &quot;public&quot; data set can be accessed by external users. If a data set is not public external access will be denied.">
+                      Public data set
+                    </label>
+                  </div>
+                  <div class="mb-3">
+                    <input class="form-check-input" type="checkbox" id="hiddenCheckbox" name="hidden" value="true" />
+                    <label class="form-label" for="hiddenCheckbox"
+                      title="Hidden data sets will not be displayed directly. They are only accessible via the download link or by entering the data set ID.">
+                      Hide data set
+                    </label>
+                  </div>
+                  <div class="mb-3">
+                    <input class="form-check-input" id="directoryCheckbox" type="checkbox" />
+                    <label class="form-label" for="directoryCheckbox" title="Upload individual files or a whole directory.">
+                      Directory upload
+                    </label>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label" for="fileSelector" id="fileSelectorLabel">
+                      Choose a file
+                    </label>
+                    <input class="form-control" id="fileSelector" multiple="" type="file" />
+                  </div>
                 </div>
-                <div class="mb-3">
-                  <retention-time-selector class="mb-3" id="retentionTime" retentiontime="48"></retention-time-selector>
+                <div>
+                  <button class="btn btn-primary" id="uploadButton" type="submit">
+                    <!--img class="icon" src="assets/icons/upload.svg" style="padding-bottom: 0.2rem;"/-->
+                    Create new DataSet
+                  </button>
                 </div>
-                <div class="mb-3">
-                  <input class="form-check-input" id="publicCheckbox" type="checkbox"/>
-                  <label class="form-label" for="publicCheckbox" title="A &quot;public&quot; data set can be accessed by external users. If a data set is not public external access will be denied.">
-                    Public data set
-                  </label>
-                </div>
-                <div class="mb-3">
-                  <input class="form-check-input" id="hiddenCheckbox" type="checkbox"/>
-                  <label class="form-label" for="hiddenCheckbox" title="Hidden data sets will not be displayed directly. They are only accessible via the download link or by entering the data set ID.">
-                    Hide data set
-                  </label>
-                </div>
-                <div class="mb-3">
-                  <input class="form-check-input" id="directoryCheckbox" type="checkbox"/>
-                  <label class="form-label" for="directoryCheckbox" title="Upload individual files or a whole directory.">
-                    Directory upload
-                  </label>
-                </div>
-                <div class="mb-3">
-                  <label class="form-label" for="fileSelector" id="fileSelectorLabel">
-                    Choose a file
-                  </label>
-                  <input class="form-control" id="fileSelector" multiple="" name="myFile" type="file"/>
-                </div>
-              </div>
-              <div>
-                <button class="btn btn-primary" id="uploadButton">
-                  <img class="icon" src="icons/upload.svg" style="padding-bottom: 0.2rem;"/>
-                  Upload
-                </button>
-              </div>
-            </form>
-          </div>
-          <div class="col-sm-8 mx-auto" hidden="" id="uploadStatus">
-            <h1 class="mb-4">
-              Create new data set
-            </h1>
-            <p>DataSet upload progress: <span id="uploadProgressDataset">0</span>%</p>
-            <p>Upload <span id="uploadFile" style="font-style: italic;">-</span>: <span id="uploadProgressFile">0</span>%</p>
+              </form>
+            </div>
+            <div class="col-sm-8 mx-auto" hidden="" id="uploadStatus">
+              <h1 class="mb-4">
+                Create new data set
+              </h1>
+              <p>DataSet upload progress: <span id="uploadProgressDataset">0</span>%</p>
+              <p>Upload <span id="uploadFile" style="font-style: italic;">-</span>: <span id="uploadProgressFile">0</span>%
+              </p>
+            </div>
           </div>
         </div>
-      </div>
     </main>
     <script src="assets/js/upload-status.js" type="module"></script>
-    <script src="assets/js/retention-time-selector.js" type="module"></script>
-    <script src="assets/js/dataset-element.js" type="module"></script>
-    <script src="assets/js/upload.js"></script>
+    <!--script src="assets/js/dataset-element.js" type="module"></script-->
   </body>
 </HTML>

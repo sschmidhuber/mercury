@@ -52,7 +52,7 @@ end
     render_initial_page(storage_status::StorageStatus, datasets::Union{Vector{DataSet},Nothing}, internal=false)
 
 """
-function render_initial_page(storage_status::StorageStatus, datasets::Union{Vector{DataSet},Nothing}, internal=false)
+function render_datasets_page(storage_status::StorageStatus, datasets::Union{Vector{DataSet},Nothing}, internal=false)
     # load and render subsections
     storage_status_html = render_storage_status(storage_status, internal)
     ds_html = render_datasets(datasets, internal)
@@ -62,6 +62,11 @@ function render_initial_page(storage_status::StorageStatus, datasets::Union{Vect
     # join subsections together
     index_tpl = Mustache.load("templates/index.html")
     Mustache.render(index_tpl, storage_status=storage_status_html, ds=ds_html, external=external)
+end
+
+function render_upload_page(internal=false)
+    upload_tpl = Mustache.load("templates/upload.html")
+    Mustache.render(upload_tpl)
 end
 
 """

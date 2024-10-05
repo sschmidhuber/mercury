@@ -92,7 +92,7 @@ Return the URI of the given DataSet.
 """
 function download_uri(ds::DataSet)
     directory  = "/live/" * string(ds.id) * "/"
-    filename = length(ds.files) == 1 && ds.files[1].directory |> isempty ? ds.files[1].name : ds.label * ".zip"
+    filename = length(ds.files) == 1 && ds.files[1].directory |> isempty ? ds.files[1].name : replace(ds.label, '/' => '-') * ".zip"
 
     return directory * filename
 end
@@ -104,5 +104,5 @@ end
 Returns the download file name of a given DataSet.
 """
 function download_filename(ds::DataSet)::String
-    length(ds.files) == 1 && ds.files[1].directory |> isempty ? ds.files[1].name : "$(ds.label).zip"
+    length(ds.files) == 1 && ds.files[1].directory |> isempty ? ds.files[1].name : "$(replace(ds.label, '/' => '-')).zip"
 end

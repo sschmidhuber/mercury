@@ -181,11 +181,12 @@ function promote_dataset(id::UUID)
             @warn "$id: failed to move file to 'live' directory"
         end
     else
+        label = replace(ds.label, "/" => "-")
         try
             @info "$id: create archive for uploaded files"
-            run(Cmd(`zip -0 -q $(ds.label).zip $(map(file -> joinpath(file.directory, file.name), ds.files))`, dir=tmppath))
+            run(Cmd(`zip -0 -q $(label).zip $(map(file -> joinpath(file.directory, file.name), ds.files))`, dir=tmppath))
             @info "$id: move archive to 'live' directory"
-            mv(joinpath(tmppath, "$(ds.label).zip"), joinpath(livepath, "$(ds.label).zip"))
+            mv(joinpath(tmppath, "$(label).zip"), joinpath(livepath, "$(label).zip"))
         catch e
             showerror(stderr, e)
             @warn "$id: failed to archive and move files to 'live' directory"
