@@ -49,6 +49,25 @@ end
 
 
 """
+    render_alert(message::String, alert_type::String="primary")
+
+Supported alert_ypes are:
+ * primary
+ * secondary
+ * success
+ * danger
+ * warning
+ * info
+ * light
+ * dark
+"""
+function render_alert(message::String, alert_type::String="primary")
+    tpl = mt"<div hx-swap-oob=\"true\" id=\"alert\" class=\"alert alert-{{:type}}\" role=\"alert\">{{:message}}</div>"
+    Mustache.render(tpl, message=message, type=alert_type)
+end
+
+
+"""
     render_initial_page(storage_status::StorageStatus, datasets::Union{Vector{DataSet},Nothing}, internal=false)
 
 """

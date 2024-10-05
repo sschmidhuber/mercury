@@ -49,16 +49,16 @@ end
     local request_body
     try
         request_body = formdata(req)
-        #request_body = Oxygen.json(req)
     catch e
         showerror(stderr, e)
-        return HTTP.Response(422, Dict("error" => "invalid request content", "detail" => "failed to parse JSON request body") |> JSON.json)
+        return HTTP.Response(422, Dict("error" => "invalid request content", "detail" => "failed to parse Formdata request body") |> JSON.json)
     end
 
     @show request_body
-    
-    #html("<div hx-swap-oob=\"true\" id=\"alertPlaceholder\">Not implemented, yet!</div>")
-    html("<div>Not implemented, yet!</div>")
+
+    render_alert("Not implemented, yet!", "primary")
+
+    #return HTTP.Response(422, Dict("error" => "invalid request content", "detail" => "failed to parse Formdata request body") |> JSON.json)
 end
 
 ## Create a new DataSet Data API

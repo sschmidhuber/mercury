@@ -114,8 +114,8 @@
               New / Upload
             </h1>
             <div id="mainContent">
-              <div id="alertPlaceholder" hx-swap-oob="true"></div>
-              <form hx-post="/rest/datasets" hx-vals='js:{...getFiles()}'>
+              <div id="alert" hx-swap-oob="true"></div>
+              <form hx-post="/rest/datasets" hx-vals='js:{...getFiles()}' hx-swap="none">
                 <div>
                   <div class="mb-3">
                     <label class="form-label" for="label">
