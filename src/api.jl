@@ -58,7 +58,7 @@ end
 
     render_alert("Not implemented, yet!", "primary")
 
-    #return HTTP.Response(422, Dict("error" => "invalid request content", "detail" => "failed to parse Formdata request body") |> JSON.json)
+    return HTTP.Response(422, render_alert("Failed, to parse body!", "danger"))
 end
 
 ## Create a new DataSet Data API
