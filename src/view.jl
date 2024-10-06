@@ -47,6 +47,11 @@ end
 # Render functions
 =#
 
+function render_progress_new_Dataset(ds::DataSet)
+    tpl = Mustache.load("templates/progress_new_dataset.html")
+    Mustache.render(tpl, id=ds.id, label=ds.label)
+end
+
 
 """
     render_alert(message::String, alert_type::String="primary")

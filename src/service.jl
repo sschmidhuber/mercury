@@ -14,11 +14,11 @@ end
 
 
 """
-    add_dataset(id::UUID, filename::Vector{AbstractString}, type::Vector{MIME}, files)
+    add_dataset(id::UUID, label::String, retention_time::Int, hidden::Bool, public::Bool, files::Vector{File})::DataSet
 
 Add a new Data Set
 """
-function add_dataset(id::UUID, label::String, retention_time::Int, hidden::Bool, public::Bool, files::Vector{File})
+function add_dataset(id::UUID, label::String, retention_time::Int, hidden::Bool, public::Bool, files::Vector{File})::DataSet
     ds = DataSet(id, strip(label), [], retention_time, hidden, public, files)
     create_dataset(ds)
     return ds

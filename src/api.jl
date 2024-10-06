@@ -51,14 +51,117 @@ end
         request_body = formdata(req)
     catch e
         showerror(stderr, e)
-        return HTTP.Response(422, Dict("error" => "invalid request content", "detail" => "failed to parse Formdata request body") |> JSON.json)
+        return HTTP.Response(422, render_alert("Failed to parse Formdata request body.", "danger"))
     end
 
     @show request_body
 
-    render_alert("Not implemented, yet!", "primary")
+    # create files
+    files = Vector{File}()
+    counter = 0
+    while true
+        if haskey(request_body, string(counter))
+            try
+                input = JSON3.read(request_body[string(counter)], NamedTuple)
+                mime = mime_from_path(input.path) |> isnothing ? MIME(input.type) : mime_from_path(input.path)
+                file = File(basename(input.path), dirname(input.path), input.size, mime)
+                
+                # file validations
+                if file.size > config["limits"]["filesize"]
+                    return HTTP.Response(422, render_alert("File size exceeds limit of $(config["limits"]["filesize"] |> format_size).", "danger"))
+                end
+    
+                if isnothing(file.name) || isempty(file.name) || contains(file.name, '/')
+                    return HTTP.Response(422, render_alert("File name missing.", "danger"))
+                end
+    
+                if Sys.iswindows()
+                    if ['/', '<', '>', '\\', ':', '"', '|', '?', '*'] .∈ file.name |> sum != 0
+                        return HTTP.Response(422, render_alert("File name contains character not allowed on Windows systems.", "danger"))
+                    end
+                    if ['<', '>', ':', '"', '|', '?', '*'] .∈ file.directory |> sum != 0
+                        return HTTP.Response(422, render_alert("Directory name contains character not allowed on Windows systems.", "danger"))
+                    end
+                else
+                    if '/' ∈ file.name
+                        return HTTP.Response(422, render_alert("File name contains not allowed character '/'.", "danger"))
+                    end
+                end
+                push!(files, file)
+            catch err
+                @warn "couldn't create file"
+                showerror(stderr, err)
+    
+                return HTTP.Response(422, render_alert("Failed to create file.", "danger"))
+            end
+        else
+            # no further key found
+            break
+        end
+        counter += 1
+    end
 
-    return HTTP.Response(422, render_alert("Failed, to parse body!", "danger"))
+    if counter == 0
+        return HTTP.Response(422, render_alert("Please select at least one file to upload.", "warning"))
+    end
+
+    # create DataSet
+    dsid = uuid4()
+
+    if isnothing(request_body["label"]) || isempty(strip(request_body["label"]))
+        if counter == 1
+            label = (files |> only).name |> basename
+        else
+            label = "Data Set $(today())"
+        end
+    else
+        label = request_body["label"]
+    end
+
+    local retention_time
+    try
+        retention_time = parse(Int, request_body["retentionTime"])
+    catch err
+        @warn "couldn't parse \"retention_time\""
+        showerror(stderr, err)
+        return HTTP.Response(422, render_alert("Couldn't parse retention time.", "danger"))
+    end
+
+    # checkbox values are only transmitted if true in HTML forms
+    hidden = haskey(request_body, "hidden") ? true : false
+    public = haskey(request_body, "public") ? true : false
+
+    # dataset validations
+    if retention_time < config["retention"]["min"] || retention_time > config["retention"]["max"]
+        return HTTP.Response(400, render_alert("Retention time: $retention_time, out of bounds ($(config["retenion"]["min"])-$(config["retention"]["max"])).", "warning"))
+    end
+
+    if length(files) > config["limits"]["filenumber_per_dataset"]
+        return HTTP.Response(413, render_alert("Data Set exceeds max file number of $(config["limits"]["filenumber_per_dataset"]).", "warning"))
+    end
+
+    if count_ds() >= config["limits"]["datasetnumber"]
+        return HTTP.Response(507, render_alert("Limit of $(config["limits"]["datasetnumber"]) datasets exceeded.", "danger"))
+    end
+
+    total_size = map(x -> x.size, files) |> sum
+    if total_size > config["limits"]["datasetsize"]
+        return HTTP.Response(413, render_alert("Data Set exceeds size limit of $(config["limits"]["datasetsize"] |> format_size)", "danger"))
+    end
+    if total_size > available_storage()
+        return HTTP.Response(507, render_alert("Storage limit of $(config["limits"]["storage"] |> format_size) exceeded.", "danger"))
+    end
+
+    local ds
+    try
+        ds = add_dataset(dsid, label, retention_time, hidden, public, files)
+    catch err
+        @error "couldn't add new data set: $dsid"
+        showerror(stderr, err)
+        return HTTP.Response(500, render_alert("Unexpected error, couldn't add new data set.", "danger"))
+    end
+    
+    return HTTP.Response(201, render_progress_new_Dataset(ds))
 end
 
 ## Create a new DataSet Data API

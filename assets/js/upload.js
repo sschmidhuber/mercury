@@ -38,6 +38,8 @@ document.addEventListener("visibilitychange", async () => {
     }
 });
 
+document.addEventListener("htmx:load", () => console.log("start upload"));
+
 
 //uploadButton.addEventListener("click", upload);
 directoryCheckbox.addEventListener("click", directoryMode);

@@ -10,6 +10,8 @@ TODOs:
     * Navigation with hx-boost
     * Cleanup
 * migrate from JSON to SQLite
+* update to latest Bootstrap version
+    * add automatic dark mode
 * add files to existing dataset
 * external access support (upload)
 * search data sets, get hidden data sets by ID
@@ -56,6 +58,7 @@ using Dates
 using HTTP
 using IPNets
 using JSON
+using JSON3
 using LoggingExtras
 using MIMEs
 using Mmap

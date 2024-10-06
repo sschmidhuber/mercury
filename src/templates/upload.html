@@ -114,7 +114,7 @@
             <h1 class="mb-4">
               New / Upload
             </h1>
-            <div id="mainContent">
+            <div id="mainContent" hx-swap-oob="true">
               <div id="alert" hx-swap-oob="true"></div>
               <form hx-post="/rest/datasets" hx-vals='js:{...getFiles()}' hx-swap="none">
                 <div>
@@ -159,7 +159,7 @@
                 <div>
                   <button class="btn btn-primary" id="uploadButton" type="submit">
                     <!--img class="icon" src="assets/icons/upload.svg" style="padding-bottom: 0.2rem;"/-->
-                    Create new DataSet
+                    Create new Data Set
                   </button>
                 </div>
               </form>
