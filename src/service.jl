@@ -105,19 +105,21 @@ end
 
 
 """
-    properties(id::UUID)
+    nextchunk(ds::DataSet)::Union{Tuple,Nothing}
 
-**!!! deprecated !!!**
-
-Return properties of the data set associated with the given ID.
+Returns a tuple of file ID and chunk which is expected to be uploaded by the client next
+or nothing if there are no missing data chunks in the given data set.
 """
-function properties(id::UUID)
-    ds = read_dataset(id)
-    if isnothing(ds)
-        return nothing
-    else
-        return dataset_to_dict(ds)
-    end    
+function nextchunk(ds::DataSet)::Union{Tuple,Nothing}
+    local fid, chunk
+
+    for i in 1:length(ds.files)
+        if ds.files[i].chunks_total > ds.files[i].chunks_received
+            return (i, ds.files[i].chunks_received + 1)
+        end
+    end
+
+    return nothing
 end
 
 
@@ -195,14 +197,12 @@ end
 
 
 """
-    add_chunk(dsid::UUID, fid::Int, chunk::Int, blob::AbstractArray)::Nothing
+    add_chunk(ds::DataSet, fid::Int, chunk::Int, blob::AbstractArray)::NamedTuple
 
 Add a new chunk of a file to a DataSet. Throws a DomainError if any input validation fails.
 Returns the upload progress of the DataSet and the currently uploaded file.
 """
-function add_chunk(dsid::UUID, fid::Int, chunk::Int, blob::AbstractArray)::NamedTuple
-    ds = read_dataset(dsid)
-    
+function add_chunk(ds::DataSet, fid::Int, chunk::Int, blob::AbstractArray)::NamedTuple    
     # validations
     if isnothing(ds)
         @warn "Dataset: $dsid not found, can't add new chunk"
@@ -213,7 +213,7 @@ function add_chunk(dsid::UUID, fid::Int, chunk::Int, blob::AbstractArray)::Named
         throw(DomainError(fid, "no File with given ID found"))
     end
     if ds.files[fid].chunks_received + 1 != chunk || ds.files[fid].chunks_total < chunk
-        @warn "Unexpected chunk: $chunk of file $fid of DataSet $dsid, can't add new chunk"
+        @warn "Unexpected chunk: $chunk of file $fid of DataSet $(ds.id), can't add new chunk"
         throw(DomainError(fid, "unexpected chunk"))
     end
     expected_chunk_size = if ds.files[fid].chunks_total > chunk
@@ -255,7 +255,7 @@ function upload_progress(ds, fid)
     f_chunks_total = ds.files[fid].chunks_total
     f_chunks_received = ds.files[fid].chunks_received
 
-    return (progress_dataset=Int(round(ds_chunks_received/ds_chunks_total * 100, digits=0)), file=joinpath(ds.files[fid].directory, ds.files[fid].name), progress_file=Int(round(f_chunks_received/f_chunks_total * 100, digits=0)), completed=ds_chunks_received==ds_chunks_total)
+    return (progress_dataset=Int(round(ds_chunks_received/ds_chunks_total * 100, digits=0)), file=joinpath(ds.files[fid].directory, ds.files[fid].name), progress_file=Int(round(f_chunks_received/f_chunks_total * 100, digits=0)), completed=ds_chunks_received==ds_chunks_total, nextchunk=nextchunk(ds))
 end
 
 """

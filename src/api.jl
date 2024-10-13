@@ -54,8 +54,6 @@ end
         return HTTP.Response(422, render_alert("Failed to parse Formdata request body.", "danger"))
     end
 
-    @show request_body
-
     # create files
     files = Vector{File}()
     counter = 0
@@ -161,7 +159,10 @@ end
         return HTTP.Response(500, render_alert("Unexpected error, couldn't add new data set.", "danger"))
     end
     
-    return HTTP.Response(201, render_progress_new_Dataset(ds))
+    # return header with event, containing first expected data chunk
+    uploaddata = Dict("uploadData" => (dsid = 1, fid = 1, chunk = 1))
+
+    return HTTP.Response(201, ["HX-Trigger-After-Settle" => JSON3.write(uploaddata)], render_progress_new_Dataset(ds))
 end
 
 ## Create a new DataSet Data API
@@ -290,6 +291,42 @@ end
 
 
 ## Upload a chunk of data of an existing file of some DataSet
+
+@put rest("/datasets/{dsid}/files/{fid}/{chunk}") function(req, dsid, fid, chunk)
+    local ds, progress
+    try
+        content = HTTP.parse_multipart_form(req)
+        if content |> isnothing
+            return HTTP.Response(422, Dict("error" => "invalid request content", "detail" => "parsing multipart form failed") |> JSON.json)
+        end        
+        blob = (content |> only).data.data
+        ds = load_dataset(UUID(dsid))
+        if ds |> isnothing
+            return HTTP.Response(422, Dict("error" => "invalid request content", "detail" => "invalid DataSet ID: $dsid") |> JSON.json)
+        end
+        progress = add_chunk(ds, parse(Int, fid), parse(Int, chunk), blob)
+    catch err
+        if err isa DomainError
+            return HTTP.Response(422, Dict("error" => "invalid request content", "detail" => "failed to process chunk") |> JSON.json)
+        else
+            @warn "couldn't process chunk $chunk of file: $fid of dataset: $dsid"
+            showerror(stderr, err)
+
+            return HTTP.Response(500, Dict("error" => "internal server error", "detail" => "failed to process chunk") |> JSON.json)
+        end
+    end
+
+    if progress.completed
+        return HTTP.Response(200, progress |> JSON.json)
+    else
+        # return HX-Trigger header with next expected data chunk
+        uploaddata = Dict("uploadData" => (dsid = dsid, fid = progress.nextchunk[1], chunk = progress.nextchunk[2]))
+    
+        return HTTP.Response(201, ["HX-Trigger-After-Settle" => JSON3.write(uploaddata)], render_progress_upload(ds, progress))
+    end   
+end
+
+#= inactive until needed
 @put "/datasets/{dsid}/files/{fid}/{chunk}" function(req, dsid, fid, chunk)
     local progress
     try
@@ -312,7 +349,7 @@ end
     end
     
     return HTTP.Response(200, progress |> JSON.json)
-end
+end=#
 
 
 

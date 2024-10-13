@@ -1,0 +1,13 @@
+
+        <li hx-trigger="uploadData from:body"
+            hx-put="/rest/datasets/{{:dsid}}/files/{{:fid}}/{{:chunk}}"
+            hx-encoding="multipart/form-data"
+            hx-vals="js:{chunk: getNextChunk(event)}"
+            hx-swap="outerHTML"
+            class="list-group-item d-flex justify-content-between align-items-start">
+            <div class="ms-2 me-auto">
+                <div class="fw-bold">Upload files</div>
+                {{:filename}}
+            </div>
+            <span class="badge bg-primary rounded-pill">in progress</span>
+        </li>

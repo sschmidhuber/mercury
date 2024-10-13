@@ -49,7 +49,13 @@ end
 
 function render_progress_new_Dataset(ds::DataSet)
     tpl = Mustache.load("templates/progress_new_dataset.html")
-    Mustache.render(tpl, id=ds.id, label=ds.label)
+    Mustache.render(tpl, dsid=ds.id, fid=1, chunk=1, filename=ds.files[1].name)
+end
+
+
+function render_progress_upload(ds::DataSet, progress::NamedTuple)
+    tpl = Mustache.load("templates/progress_upload.html")
+    Mustache.render(tpl, dsid=ds.id, fid=progress.nextchunk[1], chunk=progress.nextchunk[2], filename=ds.files[progress.nextchunk[1]].name)
 end
 
 

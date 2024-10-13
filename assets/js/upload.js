@@ -7,6 +7,7 @@ const hiddenCheckbox = document.querySelector("#hiddenCheckbox")
 const fileSelector = document.querySelector("#fileSelector")
 
 
+// legacy
 const uploadLink = document.querySelector("#upload")
 
 const newUpload = document.querySelector("#newUpload")
@@ -27,8 +28,12 @@ const uploadFile = document.querySelector("#uploadFile")
 const uploadProgressFile = document.querySelector("#uploadProgressFile")
 
 
+
+
 // init
 let wakeLock = null;
+let files = null;
+
 
 
 // listeners
@@ -38,10 +43,10 @@ document.addEventListener("visibilitychange", async () => {
     }
 });
 
-document.addEventListener("htmx:load", () => console.log("start upload"));
 
 
-//uploadButton.addEventListener("click", upload);
+
+// legacy
 directoryCheckbox.addEventListener("click", directoryMode);
 publicCheckbox.addEventListener("click", publicVisibilityWarning);
 hiddenCheckbox.addEventListener("click", publicVisibilityWarning);
@@ -59,6 +64,17 @@ function updateRetentionTime(rangeSelector) {
 }
 
 
+function directoryMode(event) {
+    if (directoryCheckbox.checked == true) {
+        fileSelectorLabel.textContent = "Choose a directory"
+        fileSelector.setAttribute("webkitdirectory", "")
+    } else {
+        fileSelectorLabel.textContent = "Choose a file"
+        fileSelector.removeAttribute("webkitdirectory")
+    }
+}
+
+
 // return a given time in hours as string, e.g. 815 hours are 5 weeks
 function retentionTimeString(hours) {
     if (hours <= 48) {
@@ -72,7 +88,7 @@ function retentionTimeString(hours) {
 
 // returns all selected files in an array, as required by the endpoint to create a dataset
 function getFiles() {
-    selectedFiles = []
+    let selectedFiles = []
     files = fileSelector.files    
     if (files.length !== 0) {
         // don't check for paths if webkitRelativePath is undefined (Fireforx for Android)
@@ -97,7 +113,39 @@ function getFiles() {
         }
     }
 
+    // obtain wakeLock
+    try {
+        wakeLock = navigator.wakeLock.request("screen");
+        console.log("wakelock obtained");
+    } catch (error) {
+        console.log(`${error.name}, ${error.message}`);
+    }
+
     return selectedFiles
+}
+
+
+// return a specified data chunk from one of the files selected for upload
+function getNextChunk(event) {
+    //console.log("dsid: " + event.detail.dsid + "\nfid: " + event.detail.fid + "\nchunk: " + event.detail.chunk);
+    if (files === null || files.length === 0) {
+        console.log("no files selected");
+        return null;
+    } else if (files.length < event.detail.fid) {
+        console.log("less files available than expected");
+        return null;        
+    } else {
+        file = files[event.detail.fid - 1]
+        if (event.detail.chunk === 1 && file.size <= sessionStorage.chunk_size) {
+            // return complete file in one chunk
+            return file
+        } else {
+            // slice data chunk from file
+            start = (event.detail.chunk - 1) * sessionStorage.chunk_size;
+            end = event.detail.chunk * sessionStorage.chunk_size > file.size ? file.size : event.detail.chunk * sessionStorage.chunk_size;
+            return file.slice(start, end);
+        }        
+    }
 }
 
 
@@ -106,12 +154,7 @@ function getFiles() {
 
     let dsid = resBody.id;
     let fid = 0;
-    try {
-        wakeLock = await navigator.wakeLock.request("screen");
-        console.log("wakelock obtained");
-    } catch (error) {
-        console.log(`${error.name}, ${error.message}`);
-    }
+    
 
     //console.log(resBody.files[fid])
 
@@ -165,6 +208,8 @@ function getFiles() {
 */
 
 
+// legacy
+
 function resetNoFilesWarning(event) {
     oldAlert = document.querySelector("#noFilesWarning")
     if (fileSelector.files.length != 0 && oldAlert != null) {
@@ -190,15 +235,7 @@ function updateProgress(progressDataset, progressFile, filename) {
 }
 
 
-function directoryMode(event) {
-    if (directoryCheckbox.checked == true) {
-        fileSelectorLabel.textContent = "Choose a directory"
-        fileSelector.setAttribute("webkitdirectory", "")
-    } else {
-        fileSelectorLabel.textContent = "Choose a file"
-        fileSelector.removeAttribute("webkitdirectory")
-    }
-}
+
 
 async function upload(event) {
     event.preventDefault()
