@@ -82,7 +82,12 @@ function render_progress_upload(ds::DataSet, progress::UploadProgress)
         last_file_2=last_file_2,
         last_file_3=last_file_3,
         last_file_4=last_file_4,
-        last_file_5=last_file_5
+        last_file_5=last_file_5,
+        last_file_1_short=shortstring(last_file_1, 17),
+        last_file_2_short=shortstring(last_file_2, 17),
+        last_file_3_short=shortstring(last_file_3, 17),
+        last_file_4_short=shortstring(last_file_4, 17),
+        last_file_5_short=shortstring(last_file_5, 17)
         )
 end
 
@@ -100,12 +105,18 @@ function render_progress_upload_completed(ds::DataSet, progress::UploadProgress)
     Mustache.render(
         tpl,
         filename=progress.file_name,
+        filename_short=shortstring(progress.file_name, 17),
         dsid=ds.id,
         last_file_1=last_file_1,
         last_file_2=last_file_2,
         last_file_3=last_file_3,
         last_file_4=last_file_4,
-        last_file_5=last_file_5
+        last_file_5=last_file_5,
+        last_file_1_short=shortstring(last_file_1, 17),
+        last_file_2_short=shortstring(last_file_2, 17),
+        last_file_3_short=shortstring(last_file_3, 17),
+        last_file_4_short=shortstring(last_file_4, 17),
+        last_file_5_short=shortstring(last_file_5, 17)
     )
 end
 

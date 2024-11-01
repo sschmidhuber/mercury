@@ -5,29 +5,49 @@
         <div class="fw-bold">Upload data</div>
         Total progress: {{:progress_dataset}} %
         <br><br>
-        {{:filename}} {{:progress_file}} %
+        <div class="d-lg-none">
+            {{:filename_short}} {{:progress_file}} %
+        </div>
+        <div class="d-none d-lg-block">
+            {{:filename}} {{:progress_file}} %
+        </div>        
         {{#:last_file_1}}
-        <div style="opacity: 80%;">
+        <div class="d-lg-none" style="opacity: 80%;">
+            {{:last_file_1_short}} 100 %
+        </div>
+        <div class="d-none d-lg-block" style="opacity: 80%;">
             {{:last_file_1}} 100 %
         </div>
         {{/:last_file_1}}
         {{#:last_file_2}}
-        <div style="opacity: 60%;">
+        <div class="d-lg-none" style="opacity: 80%;">
+            {{:last_file_2_short}} 100 %
+        </div>
+        <div class="d-none d-lg-block" style="opacity: 60%;">
             {{:last_file_2}} 100 %
         </div>
         {{/:last_file_2}}
         {{#:last_file_3}}
-        <div style="opacity: 40%;">
+        <div class="d-lg-none" style="opacity: 80%;">
+            {{:last_file_3_short}} 100 %
+        </div>
+        <div class="d-none d-lg-block" style="opacity: 40%;">
             {{:last_file_3}} 100 %
         </div>
         {{/:last_file_3}}
         {{#:last_file_4}}
-        <div style="opacity: 30%;">
+        <div class="d-lg-none" style="opacity: 80%;">
+            {{:last_file_4_short}} 100 %
+        </div>
+        <div class="d-none d-lg-block" style="opacity: 30%;">
             {{:last_file_4}} 100 %
         </div>
         {{/:last_file_4}}
         {{#:last_file_5}}
-        <div style="opacity: 20%;">
+        <div class="d-lg-none" style="opacity: 80%;">
+            {{:last_file_5_short}} 100 %
+        </div>
+        <div class="d-none d-lg-block" style="opacity: 20%;">
             {{:last_file_5}} 100 %
         </div>
         {{/:last_file_5}}

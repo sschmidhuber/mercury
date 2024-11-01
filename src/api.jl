@@ -43,8 +43,7 @@ end
 end
 
 
-## Create a new DataSet REST API
-
+# create a new Data Set
 @post rest("/datasets") function (req, middleware=[internal])
     local request_body
     try
@@ -165,7 +164,8 @@ end
     return HTTP.Response(201, ["HX-Trigger-After-Settle" => JSON3.write(uploaddata)], render_progress_new_Dataset(ds))
 end
 
-## Create a new DataSet Data API
+
+## Create a new DataSet (Data API)
 #= inactive until needed
 @post "/datasets" function(req, middleware=[internal])
     local request_body
@@ -326,6 +326,7 @@ end
     end   
 end
 
+
 #= inactive until needed
 @put "/datasets/{dsid}/files/{fid}/{chunk}" function(req, dsid, fid, chunk)
     local progress
@@ -352,7 +353,7 @@ end
 end=#
 
 
-# Renders a status bagde, based on the stage of the DataSet 
+# requests the stage of a Data Set (e.g. while created)
 @get rest("/datasets/{id}/stage") function(req, id::String)
     local dsid, ds
     try
@@ -366,6 +367,8 @@ end=#
     render_progress_data_processing(ds)
 end
 
+
+#==  Additional inactive Data API endpoints  ==
 
 @get "/datasets" function(req)
     available_ds = available_datasets(req.context[:internal])
@@ -427,4 +430,4 @@ end
 
     return res
 end
-
+=#

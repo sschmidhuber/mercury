@@ -106,3 +106,29 @@ Returns the download file name of a given DataSet.
 function download_filename(ds::DataSet)::String
     length(ds.files) == 1 && ds.files[1].directory |> isempty ? ds.files[1].name : "$(replace(ds.label, '/' => '-')).zip"
 end
+
+
+
+"""
+    shortstring(str::AbstractString, maxlen::Int)
+
+Shortens a String to the given maxlen characters.
+"""
+function shortstring(str::Union{AbstractString,Nothing}, maxlen::Int)::String
+    if maxlen < 5
+        throw(DomainError(maxlen, "Minimum 'maxlen' is 5."))
+    end
+    if isnothing(str)
+        return ""
+    end
+    if length(str) <= maxlen
+        return str
+    end
+
+    n = 0   # index of valid codeunits
+    for i in 1:maxlen-3
+        n = nextind(str,n)
+    end
+
+    return str[1:n] * "..."
+end
