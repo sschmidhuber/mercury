@@ -53,9 +53,76 @@ function render_progress_new_Dataset(ds::DataSet)
 end
 
 
-function render_progress_upload(ds::DataSet, progress::NamedTuple)
+function render_progress_upload(ds::DataSet, progress::UploadProgress)
     tpl = Mustache.load("templates/progress_upload.html")
-    Mustache.render(tpl, dsid=ds.id, fid=progress.nextchunk[1], chunk=progress.nextchunk[2], filename=ds.files[progress.nextchunk[1]].name)
+
+    # get the last 5 files which were uploaded already
+    last_file_1 = progress.next_file_id > 1 ? ds.files[progress.next_file_id-1].name : nothing
+    last_file_2 = progress.next_file_id > 2 ? ds.files[progress.next_file_id-2].name : nothing
+    last_file_3 = progress.next_file_id > 3 ? ds.files[progress.next_file_id-3].name : nothing
+    last_file_4 = progress.next_file_id > 4 ? ds.files[progress.next_file_id-4].name : nothing
+    last_file_5 = progress.next_file_id > 5 ? ds.files[progress.next_file_id-5].name : nothing
+    
+    if progress.file_id != progress.next_file_id
+        # just switched to new file
+        progress_current_file = 0
+    else
+        progress_current_file = progress.file_progress
+    end
+
+    Mustache.render(
+        tpl,
+        dsid=ds.id,
+        fid=progress.next_file_id,
+        chunk=progress.next_chunk_id,
+        filename=ds.files[progress.next_file_id].name,
+        progress_dataset=progress.ds_progress,
+        progress_file=progress_current_file,
+        last_file_1=last_file_1,
+        last_file_2=last_file_2,
+        last_file_3=last_file_3,
+        last_file_4=last_file_4,
+        last_file_5=last_file_5
+        )
+end
+
+
+function render_progress_upload_completed(ds::DataSet, progress::UploadProgress)
+    tpl = Mustache.load("templates/progress_upload_completed.html")
+
+    # get the last 5 files which were uploaded already
+    last_file_1 = length(ds.files) > 1 ? ds.files[end-1].name : nothing
+    last_file_2 = length(ds.files) > 2 ? ds.files[end-2].name : nothing
+    last_file_3 = length(ds.files) > 3 ? ds.files[end-3].name : nothing
+    last_file_4 = length(ds.files) > 4 ? ds.files[end-4].name : nothing
+    last_file_5 = length(ds.files) > 5 ? ds.files[end-5].name : nothing
+    
+    Mustache.render(
+        tpl,
+        filename=progress.file_name,
+        dsid=ds.id,
+        last_file_1=last_file_1,
+        last_file_2=last_file_2,
+        last_file_3=last_file_3,
+        last_file_4=last_file_4,
+        last_file_5=last_file_5
+    )
+end
+
+
+function render_progress_data_processing(ds::Union{DataSet,Nothing})
+    tbl = Mustache.load("templates/progress_data_processing.html")
+
+    if isnothing(ds)
+        Mustache.render(tbl, color="bg-danger", text="failed", polling=false)
+    elseif ds.stage ∈ [initial, scanned, prepared]
+        Mustache.render(tbl, color="bg-primary", text="in progress", polling=true, dsid=ds.id)
+    elseif ds.stage == available
+        ds_html = render_datasets([ds])
+        Mustache.render(tbl, color="bg-success", text="done", polling=false, dataset=ds_html)
+    else
+        Mustache.render(tbl, color="bg-danger", text="failed", polling=false)
+    end
 end
 
 

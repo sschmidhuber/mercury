@@ -1,27 +1,28 @@
 <div>
-    {{#:datasets}}
-    <div class="shadow card my-3">
-      <div class="card-header">
-        <span class="d-lg-none" style="margin-right: 0.5em;" title="ID: {{id}}">ID: {{id_short}}</span>
-        <span class="d-none d-lg-inline-block" style="margin-right: 0.5em;">ID: {{ds.id}}</span>
-        <span class="badge rounded-pill bg-secondary">{{#ds.public}}Public{{/ds.public}}</span>
-        <span class="badge rounded-pill bg-secondary">{{#ds.hidden}}Hidden{{/ds.hidden}}</span>
-      </div>
-      <div class="card-body">
-        <h5 class="card-title">{{ds.label}}</h5><p class="card-text">Retention time: {{time_left_f}}<br>
-          Size: {{size_total_f}} ({{count_files_f}})<br>
-          Downloads: {{ds.downloads}}</p>
-          <a class="btn btn-primary" href="/datasets/{{ds.id}}" download="{{download_filename}}">
-            <img src="assets/icons/download.svg" style="padding-bottom: 0.2rem;"/>&nbsp;Download</a>
-          <a class="btn btn-secondary" href="mailto:?to=&subject={{ds.label}}&body={{email_body}}">
-            <span> <img src="assets/icons/envelope.svg" style="padding-bottom: 0.2rem;"/> </span>
-            <span class="d-none d-lg-inline-block">&nbsp;Send Link</span>
-          </a>
-          <a hx-on:click="copyLink(this,'{{download_url}}')" class="btn btn-secondary copy-link">
-            <span> <img id="clipboard-icon" src="assets/icons/clipboard.svg" style="padding-bottom: 0.2rem;"/> </span>
-            <span class="d-none d-lg-inline-block">&nbsp;Copy Link</span>
-          </a>
-          <!-- not implemented yet
+  {{#:datasets}}
+  <div class="shadow card my-3">
+    <div class="card-header">
+      <span class="d-lg-none" style="margin-right: 0.5em;" title="ID: {{id}}">ID: {{id_short}}</span>
+      <span class="d-none d-lg-inline-block" style="margin-right: 0.5em;">ID: {{ds.id}}</span>
+      <span class="badge rounded-pill bg-secondary">{{#ds.public}}Public{{/ds.public}}</span>
+      <span class="badge rounded-pill bg-secondary">{{#ds.hidden}}Hidden{{/ds.hidden}}</span>
+    </div>
+    <div class="card-body">
+      <h5 class="card-title">{{ds.label}}</h5>
+      <p class="card-text">Retention time: {{time_left_f}}<br>
+        Size: {{size_total_f}} ({{count_files_f}})<br>
+        Downloads: {{ds.downloads}}</p>
+      <a class="btn btn-primary" href="/datasets/{{ds.id}}" download="{{download_filename}}">
+        <img src="assets/icons/download.svg" style="padding-bottom: 0.2rem;" />&nbsp;Download</a>
+      <a class="btn btn-secondary" href="mailto:?to=&subject={{ds.label}}&body={{email_body}}">
+        <span> <img src="assets/icons/envelope.svg" style="padding-bottom: 0.2rem;" /> </span>
+        <span class="d-none d-lg-inline-block">&nbsp;Send Link</span>
+      </a>
+      <a hx-on:click="copyLink(this,'{{download_url}}')" class="btn btn-secondary copy-link">
+        <span> <img id="clipboard-icon" src="assets/icons/clipboard.svg" style="padding-bottom: 0.2rem;" /> </span>
+        <span class="d-none d-lg-inline-block">&nbsp;Copy Link</span>
+      </a>
+      <!-- not implemented yet
           <a ?hidden=${true} @click=${"navigator.share(shareData)"} class="btn btn-secondary">
             not implemented yet 
             <span> <img src="../client/icons/share-fill.svg" style="padding-bottom: 0.2rem;"/> </span>
@@ -32,8 +33,7 @@
             <span> <img src="../client/icons/qr-code.svg" style="padding-bottom: 0.2rem;"/> </span>
             <span class="d-none d-lg-inline-block">&nbsp;QR Code</span>
           </a> -->
-        </div>
-      </div>
     </div>
-    {{/:datasets}}
   </div>
+  {{/:datasets}}
+</div>

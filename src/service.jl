@@ -110,7 +110,7 @@ end
 Returns a tuple of file ID and chunk which is expected to be uploaded by the client next
 or nothing if there are no missing data chunks in the given data set.
 """
-function nextchunk(ds::DataSet)::Union{Tuple,Nothing}
+function nextchunk(ds::DataSet)::Tuple
     local fid, chunk
 
     for i in 1:length(ds.files)
@@ -119,7 +119,7 @@ function nextchunk(ds::DataSet)::Union{Tuple,Nothing}
         end
     end
 
-    return nothing
+    return nothing, nothing
 end
 
 
@@ -202,13 +202,13 @@ end
 Add a new chunk of a file to a DataSet. Throws a DomainError if any input validation fails.
 Returns the upload progress of the DataSet and the currently uploaded file.
 """
-function add_chunk(ds::DataSet, fid::Int, chunk::Int, blob::AbstractArray)::NamedTuple    
+function add_chunk(ds::DataSet, fid::Int, chunk::Int, blob::AbstractArray)::UploadProgress    
     # validations
     if isnothing(ds)
         @warn "Dataset: $dsid not found, can't add new chunk"
         throw(DomainError(dsid, "no DataSet with given ID found"))
     end
-    if ds.files |> length < fid
+    if length(ds.files) < fid
         @warn "File: $fid of DataSet $dsid not found, can't add new chunk"
         throw(DomainError(fid, "no File with given ID found"))
     end
@@ -240,7 +240,7 @@ function add_chunk(ds::DataSet, fid::Int, chunk::Int, blob::AbstractArray)::Name
     update_dataset(ds)
     progress = upload_progress(ds, fid)
     
-    if progress.completed
+    if progress.ds_completed
         @debug "upload completed, trigger further processing"
         Threads.@spawn process_dataset(ds.id)
     end
@@ -249,13 +249,23 @@ function add_chunk(ds::DataSet, fid::Int, chunk::Int, blob::AbstractArray)::Name
 end
 
 
-function upload_progress(ds, fid)
+function upload_progress(ds, fid)::UploadProgress
     ds_chunks_total = map(file -> file.chunks_total, ds.files) |> sum
     ds_chunks_received = map(file -> file.chunks_received, ds.files) |> sum
     f_chunks_total = ds.files[fid].chunks_total
     f_chunks_received = ds.files[fid].chunks_received
+    next_file_id, next_chunk_id = nextchunk(ds)
 
-    return (progress_dataset=Int(round(ds_chunks_received/ds_chunks_total * 100, digits=0)), file=joinpath(ds.files[fid].directory, ds.files[fid].name), progress_file=Int(round(f_chunks_received/f_chunks_total * 100, digits=0)), completed=ds_chunks_received==ds_chunks_total, nextchunk=nextchunk(ds))
+    return UploadProgress(
+        Int(round(ds_chunks_received/ds_chunks_total * 100, digits=0)),
+        ds_chunks_received==ds_chunks_total,
+        Int(round(f_chunks_received/f_chunks_total * 100, digits=0)),
+        joinpath(ds.files[fid].directory, ds.files[fid].name),
+        fid,
+        f_chunks_total==f_chunks_received,
+        next_file_id,
+        next_chunk_id
+    )
 end
 
 """

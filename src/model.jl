@@ -164,3 +164,18 @@ struct StorageStatus
 end
 
 StorageStatus(count_ds, count_files) = StorageStatus(count_ds, count_files, nothing, nothing, nothing, nothing)
+
+
+"""
+UploadProgress represents the progress of an upload process at one point in time.
+"""
+struct UploadProgress
+    ds_progress::Int
+    ds_completed::Bool
+    file_progress::Int
+    file_name::String
+    file_id::Int
+    file_completed::Bool
+    next_file_id::Union{Int,Nothing}
+    next_chunk_id::Union{Int,Nothing}
+end

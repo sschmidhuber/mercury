@@ -43,6 +43,8 @@ document.addEventListener("visibilitychange", async () => {
     }
 });
 
+document.body.addEventListener("uploadCompleted", releaseWakelock);
+
 
 
 
@@ -127,7 +129,6 @@ function getFiles() {
 
 // return a specified data chunk from one of the files selected for upload
 function getNextChunk(event) {
-    //console.log("dsid: " + event.detail.dsid + "\nfid: " + event.detail.fid + "\nchunk: " + event.detail.chunk);
     if (files === null || files.length === 0) {
         console.log("no files selected");
         return null;
@@ -145,6 +146,17 @@ function getNextChunk(event) {
             end = event.detail.chunk * sessionStorage.chunk_size > file.size ? file.size : event.detail.chunk * sessionStorage.chunk_size;
             return file.slice(start, end);
         }        
+    }
+}
+
+
+async function releaseWakelock() {
+    if (wakeLock !== null) {
+        wl = await wakeLock
+        wl.release().then(() => {
+            wakeLock = null;
+        });
+        console.log("wakeLock released");
     }
 }
 

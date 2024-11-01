@@ -1,11 +1,9 @@
-<li hx-trigger="uploadData from:body" hx-put="/rest/datasets/{{:dsid}}/files/{{:fid}}/{{:chunk}}"
-    hx-encoding="multipart/form-data" hx-vals="js:{chunk: getNextChunk(event)}" hx-swap="outerHTML"
-    class="list-group-item d-flex justify-content-between align-items-start">
+<li class="list-group-item d-flex justify-content-between align-items-start">
     <div class="ms-2 me-auto">
         <div class="fw-bold">Upload data</div>
-        Total progress: {{:progress_dataset}} %
+        Total progress: 100 %
         <br><br>
-        {{:filename}} {{:progress_file}} %
+        {{:filename}} 100 %
         {{#:last_file_1}}
         <div style="opacity: 80%;">
             {{:last_file_1}} 100 %
@@ -31,6 +29,18 @@
             {{:last_file_5}} 100 %
         </div>
         {{/:last_file_5}}
+    </div>
+    <span class="badge bg-success rounded-pill">done</span>
+</li>
+<li
+    id="processData"
+    hx-swap-oob="true"
+    hx-get="/rest/datasets/{{:dsid}}/stage"
+    hx-trigger="every 1s"
+    hx-swap="outerHTML"
+    class="list-group-item d-flex justify-content-between align-items-start">
+    <div class="ms-2 me-auto">
+        <div class="fw-bold">Process data</div>
     </div>
     <span class="badge bg-primary rounded-pill">in progress</span>
 </li>

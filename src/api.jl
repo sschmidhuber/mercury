@@ -291,7 +291,6 @@ end
 
 
 ## Upload a chunk of data of an existing file of some DataSet
-
 @put rest("/datasets/{dsid}/files/{fid}/{chunk}") function(req, dsid, fid, chunk)
     local ds, progress
     try
@@ -316,11 +315,12 @@ end
         end
     end
 
-    if progress.completed
-        return HTTP.Response(200, progress |> JSON.json)
+    if progress.ds_completed
+        # return with HX-Trigger header to release wakelock
+        return HTTP.Response(201, ["HX-Trigger" => "uploadCompleted"], render_progress_upload_completed(ds, progress))
     else
         # return HX-Trigger header with next expected data chunk
-        uploaddata = Dict("uploadData" => (dsid = dsid, fid = progress.nextchunk[1], chunk = progress.nextchunk[2]))
+        uploaddata = Dict("uploadData" => (dsid = dsid, fid = progress.next_file_id, chunk = progress.next_chunk_id))
     
         return HTTP.Response(201, ["HX-Trigger-After-Settle" => JSON3.write(uploaddata)], render_progress_upload(ds, progress))
     end   
@@ -351,6 +351,20 @@ end
     return HTTP.Response(200, progress |> JSON.json)
 end=#
 
+
+# Renders a status bagde, based on the stage of the DataSet 
+@get rest("/datasets/{id}/stage") function(req, id::String)
+    local dsid, ds
+    try
+        dsid = UUID(id)
+        ds = load_dataset(dsid)
+    catch
+        sleep(5)
+        return HTTP.Response(422, Dict("error" => "invalid request", "detail" => "$id is not a valid UUID") |> JSON.json)
+    end
+
+    render_progress_data_processing(ds)
+end
 
 
 @get "/datasets" function(req)
@@ -413,3 +427,4 @@ end
 
     return res
 end
+
