@@ -5,10 +5,6 @@ module Mercury
 https://xkcd.com/949/
 
 TODOs:
-* migrate FE to htmx
-    * Upload
-    * Navigation with hx-boost
-    * Cleanup
 * migrate from JSON to SQLite
 * update to latest Bootstrap version
     * add automatic dark mode
