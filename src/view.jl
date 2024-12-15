@@ -23,7 +23,7 @@ end
 
 function DataSetView(ds::DataSet)
     count_files_f = "$(length(ds.files)) $(length(ds.files) == 1 ? "file" : "files")"
-    time_of_deletion = ds.timestamp + Hour(ds.retention)
+    time_of_deletion = ds.timestamp_created + Hour(ds.retention)
     download_extension = length(ds.files) == 1 && ds.files[1].directory |> isempty ? extension_from_mime(ds.files[1].type) : ".zip"
     download_name = download_filename(ds)
     download_url = (ds.public ? config["network"]["external_url"] : config["network"]["internal_url"]) * "/datasets/$(ds.id)"
@@ -76,6 +76,7 @@ function render_progress_upload(ds::DataSet, progress::UploadProgress)
         fid=progress.next_file_id,
         chunk=progress.next_chunk_id,
         filename=ds.files[progress.next_file_id].name,
+        filename_short=shortstring(ds.files[progress.next_file_id].name, 17),
         progress_dataset=progress.ds_progress,
         progress_file=progress_current_file,
         last_file_1=last_file_1,
@@ -121,14 +122,21 @@ function render_progress_upload_completed(ds::DataSet, progress::UploadProgress)
 end
 
 
+function render_progress_data_processing(stage::Stage, dsid::UUID)
+    tbl = Mustache.load("templates/progress_data_processing.html")
+
+    if stage ∈ [initial, scanned, prepared]
+        Mustache.render(tbl, color="bg-primary", text="in progress", polling=true, dsid=dsid)
+    else
+        Mustache.render(tbl, color="bg-danger", text="failed", polling=false)
+    end
+end
+
+
 function render_progress_data_processing(ds::Union{DataSet,Nothing})
     tbl = Mustache.load("templates/progress_data_processing.html")
 
-    if isnothing(ds)
-        Mustache.render(tbl, color="bg-danger", text="failed", polling=false)
-    elseif ds.stage ∈ [initial, scanned, prepared]
-        Mustache.render(tbl, color="bg-primary", text="in progress", polling=true, dsid=ds.id)
-    elseif ds.stage == available
+    if ds.stage == available
         ds_html = render_datasets([ds])
         Mustache.render(tbl, color="bg-success", text="done", polling=false, dataset=ds_html)
     else

@@ -1,10 +1,11 @@
 // DOM elements
 const retentionTimeInput = document.querySelector("#retentionTimeInput");
 const retentionTimeLabel = document.querySelector("#retentionTimeLabel");
-const label = document.querySelector("#label")
-const publicCheckbox = document.querySelector("#publicCheckbox")
-const hiddenCheckbox = document.querySelector("#hiddenCheckbox")
-const fileSelector = document.querySelector("#fileSelector")
+const label = document.querySelector("#label");
+const publicCheckbox = document.querySelector("#publicCheckbox");
+const hiddenCheckbox = document.querySelector("#hiddenCheckbox");
+const directoryCheckbox = document.querySelector("#directoryCheckbox");
+const fileSelector = document.querySelector("#fileSelector");
 
 
 // init
@@ -13,6 +14,7 @@ let files = null;
 
 
 // listeners
+directoryCheckbox.addEventListener("change", directoryMode)
 document.addEventListener("visibilitychange", async () => {
     if (wakeLock !== null && document.visibilityState === "visible") {
         wakeLock = await navigator.wakeLock.request("screen");

@@ -19,6 +19,7 @@ end
 Add a new Data Set
 """
 function add_dataset(id::UUID, label::String, retention_time::Int, hidden::Bool, public::Bool, files::Vector{File})::DataSet
+    @debug "add dataset"
     ds = DataSet(id, strip(label), [], retention_time, hidden, public, files)
     create_dataset(ds)
     return ds
@@ -31,10 +32,11 @@ end
 Process a newly uploaded dataset.
 """
 function process_dataset(id::UUID)
+    @debug "process a dataset"
     if config["skip_malware_check"] && prepare(id)
-        promote_dataset(id)
+        update_dataset_promote(id)
     elseif malwarescan(id) && prepare(id)
-        promote_dataset(id)
+        update_dataset_promote(id)
     else
         @warn "processing DataSet: $(string(id)) failed"
     end
@@ -58,16 +60,14 @@ function malwarescan(id::UUID)::Bool
         dir = joinpath(config["storage_dir"], "tmp", string(id))
         try
             run(`clamscan -ri --no-summary $dir`)
-            ds.stage = scanned
-            ds.stagechange = now()
-            update_dataset(ds)
+            update_dataset_stage(id, scanned)
             return true
         catch e
             @warn "malware check failed for: $id"
             if e isa Base.IOError
                 @warn "check if clamav is installed on the host"
             end
-            delete_dataset(id, hard = true)
+            delete_dataset_hard(id)
             return false
         end          
     catch _
@@ -85,6 +85,7 @@ Preprocess DataSet and set stage to "prepared" before it can be promoted for dow
 Return true if preparation was executed successfully, othewise return false.
 """
 function prepare(id::UUID)::Bool
+    @debug "prepare a dataset"
     try
         ds = read_dataset(id)
         if isnothing(ds)
@@ -92,9 +93,7 @@ function prepare(id::UUID)::Bool
             return false
         else
             #TODO: add DataSet validation, create icons/thumbnails, QR code,...
-            ds.stage = prepared
-            ds.stagechange = now()
-            update_dataset(ds)
+            update_dataset_stage(id, prepared)
             return true
         end
     catch _
@@ -110,31 +109,14 @@ end
 Returns a tuple of file ID and chunk which is expected to be uploaded by the client next
 or nothing if there are no missing data chunks in the given data set.
 """
-function nextchunk(ds::DataSet)::Tuple
-    local fid, chunk
-
-    for i in 1:length(ds.files)
-        if ds.files[i].chunks_total > ds.files[i].chunks_received
-            return (i, ds.files[i].chunks_received + 1)
-        end
-    end
-
-    return nothing, nothing
-end
-
-
-"""
-    load_dataset(id::UUID)::Union{Nothing,DataSet}
-
-Return a corresponding DataSet or nothing if no DataSet with the given ID was found.
-"""
-function load_dataset(id::UUID)::Union{Nothing,DataSet}
-    ds = read_dataset(id)
-    if isnothing(ds)
-        return nothing
+function nextchunk(ds::DataSet, fid, chunk)::Tuple
+    if ds.files[fid].chunks_total > chunk
+        return fid, chunk + 1
+    elseif length(ds.files) > fid
+        return fid + 1, 1
     else
-        return ds
-    end  
+        return nothing, nothing
+    end
 end
 
 
@@ -164,31 +146,27 @@ end
 """
     storage_status(internal)::StorageStatus
 
-Return mercury's system status, in terms of stored datasets and available storage.
+Return mercury's storeage status, in terms of stored datasets and available storage.
 """
 function storage_status(internal)::StorageStatus
-    ds = read_datasets()
+    df = read_dataset_metrics()
 
     if internal
-        count_ds = filter(x -> x.stage == available, ds) |> length
-        count_files = @chain ds begin
-            filter(x -> x.stage == available, _)
-            map(x -> length(x.files), _)
-            sum
-        end
-        used_storage = map(d -> sum(map(f -> f.size, d.files)), ds) |> sum
+        if nrow(df) == 0
+            count_ds, count_files, used_storage = 0, 0, 0
+        else
+            count_ds = df[df.stage .== available,:datasets] |> sum
+            count_files = df[df.stage .== available,:files] |> sum
+            used_storage = df[df.stage .== available,:used_storage] |> sum
+        end        
         available_storage = min(diskstat(config["storage_dir"]).available, config["limits"]["storage"] - used_storage) |> Int
         total_storage = available_storage + used_storage
         used_relative = used_storage / total_storage * 100 |> round |> Int
 
         status = StorageStatus(count_ds, count_files, format_size(used_storage), format_size(available_storage), format_size(total_storage), "$used_relative %")
     else
-        count_ds = filter(x -> x.stage == available && x.public, ds) |> length
-        count_files = @chain ds begin
-            filter(x -> x.stage == available && x.public, _)
-            map(x -> length(x.files), _)
-            sum
-        end 
+        count_ds = df[df.stage .== available .&& df.public .== true,:datasets] |> sum
+        count_files = df[df.stage .== available .&& df.public .== true,:files] |> sum
         status = StorageStatus(count_ds, count_files)
     end
 
@@ -202,14 +180,14 @@ end
 Add a new chunk of a file to a DataSet. Throws a DomainError if any input validation fails.
 Returns the upload progress of the DataSet and the currently uploaded file.
 """
-function add_chunk(ds::DataSet, fid::Int, chunk::Int, blob::AbstractArray)::UploadProgress    
+function add_chunk(ds::DataSet, fid::Int, chunk::Int, blob::AbstractArray)::UploadProgress
     # validations
     if isnothing(ds)
-        @warn "Dataset: $dsid not found, can't add new chunk"
-        throw(DomainError(dsid, "no DataSet with given ID found"))
+        @warn "Dataset: $(ds.id) not found, can't add new chunk"
+        throw(DomainError(ds.id, "no DataSet with given ID found"))
     end
     if length(ds.files) < fid
-        @warn "File: $fid of DataSet $dsid not found, can't add new chunk"
+        @warn "File: $fid of DataSet $(ds.id) not found, can't add new chunk"
         throw(DomainError(fid, "no File with given ID found"))
     end
     if ds.files[fid].chunks_received + 1 != chunk || ds.files[fid].chunks_total < chunk
@@ -223,22 +201,24 @@ function add_chunk(ds::DataSet, fid::Int, chunk::Int, blob::AbstractArray)::Uplo
         ds.files[fid].size - (chunk - 1) * config["network"]["chunk_size"]
     end
     if length(blob) != expected_chunk_size
-        @warn "Unexpected chunk size: $(length(blob)) (expected: $expected_chunk_size) of file $fid of DataSet $dsid, can't add new chunk"
+        @warn "Unexpected chunk size: $(length(blob)) (expected: $expected_chunk_size) of file $fid of DataSet $(ds.id), can't add new chunk"
         throw(DomainError(length(blob), "unexpected chunk size"))
     end
 
     try
-        store_chunk(ds, fid, chunk, blob)
+        create_file_chunk(ds, fid, chunk, blob)
     catch err
+        showerror(stderr, err)
         rethrow(err)
     end
 
-    ds.files[fid].chunks_received += 1
-    if ds.files[fid].chunks_total == ds.files[fid].chunks_received
-        ds.files[fid].timestamp_uploaded = now()        
+    if ds.files[fid].chunks_total == chunk
+        update_file_chunks_received(ds, fid, chunk, now())
+    else
+        update_file_chunks_received(ds, fid, chunk)
     end
-    update_dataset(ds)
-    progress = upload_progress(ds, fid)
+    ds.files[fid].chunks_received = chunk
+    progress = upload_progress(ds, fid, chunk)
     
     if progress.ds_completed
         @debug "upload completed, trigger further processing"
@@ -249,12 +229,12 @@ function add_chunk(ds::DataSet, fid::Int, chunk::Int, blob::AbstractArray)::Uplo
 end
 
 
-function upload_progress(ds, fid)::UploadProgress
+function upload_progress(ds, fid, chunk)::UploadProgress
     ds_chunks_total = map(file -> file.chunks_total, ds.files) |> sum
     ds_chunks_received = map(file -> file.chunks_received, ds.files) |> sum
     f_chunks_total = ds.files[fid].chunks_total
-    f_chunks_received = ds.files[fid].chunks_received
-    next_file_id, next_chunk_id = nextchunk(ds)
+    f_chunks_received = chunk
+    next_file_id, next_chunk_id = nextchunk(ds, fid, chunk)
 
     return UploadProgress(
         Int(round(ds_chunks_received/ds_chunks_total * 100, digits=0)),
@@ -298,22 +278,8 @@ If internal is set to true private and public data sets will be returned.
 If internal=false (default) only public datasets will be returned.
 """
 function available_datasets(internal=false)::Union{Vector{DataSet},Nothing}
-    ds = @chain read_datasets() begin
-        map(d -> read_dataset(d.id), _)
-        filter(d -> d.stage == available, _)
-        filter(d -> d.hidden == false, _)
-        sort(_, by = x -> lowercase(x.label))
-    end
-
-    if !internal
-        filter!(d -> d.public, ds)
-    end
-
-    if isempty(ds)
-        return nothing
-    else
-        ds
-    end
+    datasets = read_datasets(stages=[available], hidden=false, public=(internal ? nothing : true))
+    return isempty(datasets) ? nothing : datasets
 end
 
 
@@ -323,30 +289,37 @@ end
 Periodically delete datasets if retention time is exceeded or uploads failed.
 """
 function cleanup()
+    counter = 0
     while true
         ts = now()
         ds = read_datasets()
+        counter += 1
 
         foreach(ds) do d
             if d.stage == available
                 # soft delete DataSets which exceeded their retention time
-                if d.timestamp + Hour(d.retention) < ts
+                if d.timestamp_created + Hour(d.retention) < ts
                     @info "delete $(d.label), ID: $(d.id)"
-                    delete_dataset(d.id)
+                    delete_dataset_soft(d.id)
                 end
             elseif d.stage == deleted
                 # hard delete DataSets which were already soft deleted
-                if d.stagechange + Hour(config["retention"]["purge"]) < ts
+                if d.timestamp_stagechange + Hour(config["retention"]["purge"]) < ts
                     @info "permanently delete $(d.label), ID: $(d.id)"
-                    delete_dataset(d.id, hard=true, dbrecord=true)
+                    delete_dataset_hard(d.id)
                 end
-            elseif d.stage == initial || d.stage == scanned || d.stage == prepared
+            elseif d.stage ∈ (initial, scanned, prepared)
                 # hard delete DataSets wich got stuck in initial, scanned or prepared stage
-                if d.timestamp + Day(1) < ts
+                if d.timestamp_created + Day(1) < ts
                     @info "remove from tmp layer: $(d.label), ID: $(d.id)"
-                    delete_dataset(d.id, hard=true, dbrecord=true)
+                    delete_dataset_hard(d.id)
                 end
             end
+        end
+
+        if counter > 1000
+            checkstorage()
+            counter = 0
         end
         sleep(config["retention"]["interval"])
     end

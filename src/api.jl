@@ -286,7 +286,7 @@ end=#
 
 ## Create a new file in an existing DataSet
 @post "/datasets/{id}/files" function(req, id)
-    return HTTP.Response(501, Dict("error" => "not implemented, yet", "detail" => "Adding files to existing DataSets is currently not implemented.") |> JSON.json)
+    return HTTP.Response(501, Dict("error" => "not implemented, yet", "detail" => "Adding files to existing DataSets is currently not implemented.") |> JSON3.write)
 end
 
 
@@ -296,22 +296,22 @@ end
     try
         content = HTTP.parse_multipart_form(req)
         if content |> isnothing
-            return HTTP.Response(422, Dict("error" => "invalid request content", "detail" => "parsing multipart form failed") |> JSON.json)
-        end        
+            return HTTP.Response(422, Dict("error" => "invalid request content", "detail" => "parsing multipart form failed") |> JSON3.write)
+        end
         blob = (content |> only).data.data
-        ds = load_dataset(UUID(dsid))
+        ds = read_dataset(UUID(dsid))
         if ds |> isnothing
-            return HTTP.Response(422, Dict("error" => "invalid request content", "detail" => "invalid DataSet ID: $dsid") |> JSON.json)
+            return HTTP.Response(422, Dict("error" => "invalid request content", "detail" => "invalid DataSet ID: $dsid") |> JSON3.write)
         end
         progress = add_chunk(ds, parse(Int, fid), parse(Int, chunk), blob)
     catch err
         if err isa DomainError
-            return HTTP.Response(422, Dict("error" => "invalid request content", "detail" => "failed to process chunk") |> JSON.json)
+            return HTTP.Response(422, Dict("error" => "invalid request content", "detail" => "failed to process chunk") |> JSON3.write)
         else
             @warn "couldn't process chunk $chunk of file: $fid of dataset: $dsid"
             showerror(stderr, err)
 
-            return HTTP.Response(500, Dict("error" => "internal server error", "detail" => "failed to process chunk") |> JSON.json)
+            return HTTP.Response(500, Dict("error" => "internal server error", "detail" => "failed to process chunk") |> JSON3.write)
         end
     end
 
@@ -355,16 +355,50 @@ end=#
 
 # requests the stage of a Data Set (e.g. while created)
 @get rest("/datasets/{id}/stage") function(req, id::String)
-    local dsid, ds
+    dsid = UUID(id)
+    try
+        stage = read_dataset_stage(dsid)
+        if stage ∈ [initial, scanned, prepared]
+            return render_progress_data_processing(stage, dsid)
+        else
+            ds = read_dataset(dsid)
+            return render_progress_data_processing(ds)
+        end
+    catch error
+        showerror(stderr, error)
+        sleep(5)
+        return HTTP.Response(422, Dict("error" => "invalid request", "detail" => "$id is not a valid UUID") |> JSON3.write)
+    end
+end
+
+# download a data set, this is not a REST call since download state in managed by the browser
+@get "/datasets/{id}" function(req, id)
+    local dsid
     try
         dsid = UUID(id)
-        ds = load_dataset(dsid)
     catch
         sleep(5)
-        return HTTP.Response(422, Dict("error" => "invalid request", "detail" => "$id is not a valid UUID") |> JSON.json)
+        return HTTP.Response(422, Dict("error" => "invalid request", "detail" => "$id is not a valid UUID") |> JSON3.write)
     end
 
-    render_progress_data_processing(ds)
+    # check availability
+    ds::DataSet = read_dataset(dsid)
+    if isnothing(ds) || ds.stage != available
+        sleep(5)
+        return HTTP.Response(404, Dict("error" => "resource not found", "detail" => "there is no data set available with ID: $id") |> JSON3.write)
+    end
+
+    # check authorization
+    if !ds.public && !req.context[:internal]
+        sleep(5)
+        return HTTP.Response(403, Dict("error" => "access denied", "detail" => "access to this data set is restricted") |> JSON3.write)
+    end
+
+    uri = download_uri(ds)
+    download_name = download_filename(ds)
+    update_dataset_downloads(dsid, ds.downloads += 1)
+
+    return HTTP.Response(200, ["X-Accel-Redirect" => uri, "Content-Disposition" => "attachment; filename=\"$download_name\""])
 end
 
 
@@ -372,37 +406,6 @@ end
 
 @get "/datasets" function(req)
     available_ds = available_datasets(req.context[:internal])
-end
-
-
-@get "/datasets/{id}" function(req, id)
-    local dsid
-    try
-        dsid = UUID(id)
-    catch
-        sleep(5)
-        return HTTP.Response(422, Dict("error" => "invalid request", "detail" => "$id is not a valid UUID") |> JSON.json)
-    end
-
-    # check availability
-    ds::DataSet = load_dataset(dsid)
-    if isnothing(ds) || ds.stage != available
-        sleep(5)
-        return HTTP.Response(404, Dict("error" => "resource not found", "detail" => "there is no data set available with ID: $id") |> JSON.json)
-    end
-
-    # check authorization
-    if !ds.public && !req.context[:internal]
-        sleep(5)
-        return HTTP.Response(403, Dict("error" => "access denied", "detail" => "access to this data set is restricted") |> JSON.json)
-    end
-
-    uri = download_uri(ds)
-    download_name = download_filename(ds)
-    ds.downloads += 1
-    update_dataset(ds)
-
-    return HTTP.Response(200, ["X-Accel-Redirect" => uri, "Content-Disposition" => "attachment; filename=\"$download_name\""])
 end
 
 

@@ -6,11 +6,17 @@ https://xkcd.com/949/
 
 TODOs:
 * migrate from JSON to SQLite
+* update architectural documentation
 * update to latest Bootstrap version
     * add automatic dark mode
+* improve upload status UX
 * add files to existing dataset
 * external access support (upload)
 * search data sets, get hidden data sets by ID
+* set log level in config file
+* performance tests
+    * async DB / storage access
+    * websockets vs HTTP
 * use Oxygen CRON for scheduled jobs
 * copy dataset ID to clipboard
 * print function
@@ -37,6 +43,7 @@ TODOs:
 * QR code
 * data set content details / file list* back to top button
 * load more (pagination)
+* optimize cleanup() function, not to load all datasets into memory
 * view images, videos, docuemnts, listen music of data sets
 * user info / welcome dialog
 * create setup script (load fontend and backend dependencies)
@@ -45,6 +52,7 @@ TODOs:
 * bucket / directories to seperate data sets and access to buckets / directories
 * version support for uploading same data set multiple times
 * add sceleton for not yet loaded content, e.g. datasets and system status
+* configureable actions / scripts for specific uploaded datasets (e.g. copy to ...)
 
 =#
 
@@ -53,18 +61,19 @@ using Chain
 using Dates
 using HTTP
 using IPNets
-using JSON
 using JSON3
 using LoggingExtras
 using MIMEs
-using Mmap
 using Mustache
 using Oxygen
 using Printf
 using Sockets
+using SQLite
 using SystemStats
 using TOML
+using DataFrames
 using UUIDs
+
 
 cd(@__DIR__)
 
@@ -96,9 +105,6 @@ function init()
     if config["skip_malware_check"] == true
         @warn "malware protection is disabled"
     end
-
-    # initialize flat file DB
-    initdb()
 
     # start periodic cleanup
     @async cleanup()

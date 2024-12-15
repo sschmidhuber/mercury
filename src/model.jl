@@ -1,5 +1,4 @@
 import Base.isequal
-import JSON.Writer
 
 
 """
@@ -8,7 +7,7 @@ import JSON.Writer
 mutable struct File
     name::String
     directory::String
-    size::Int128   # file size in bytes
+    size::Int
     type::MIME
     chunks_total::Int
     chunks_received::Int
@@ -23,19 +22,6 @@ File(name, directory, size, type) = begin
     chunks_total = size % chunk_size == 0 ? chunks_full : chunks_full += 1
 
     File(name, directory, size, type, chunks_total, 0, now(), nothing)
-end
-
-File(dict::Dict) = begin
-    File(
-        dict["name"],
-        dict["directory"],
-        dict["size"],
-        MIME(dict["type"]),
-        dict["chunks_total"],
-        dict["chunks_received"],
-        DateTime(dict["timestamp_created"]),
-        dict["timestamp_uploaded"] |> isnothing ? nothing : DateTime(dict["timestamp_uploaded"])
-        )
 end
 
 
@@ -71,7 +57,7 @@ Return the stage enum corresponding to the given string representation.
 """
 function stage(str::AbstractString)::Stage
     try
-            getproperty(Mercury, Symbol(str))
+        getproperty(Mercury, Symbol(str))
     catch _
         @error "invalid stage: $str"
         throw(DomainError(str))
@@ -86,8 +72,8 @@ mutable struct DataSet
     label::String
     tags::Vector{String}
     stage::Stage
-    stagechange::DateTime
-    timestamp::DateTime
+    timestamp_created::DateTime
+    timestamp_stagechange::DateTime
     retention::Int
     hidden::Bool
     protected::Bool
@@ -97,23 +83,6 @@ mutable struct DataSet
 end
 
 DataSet(id, label, tags, retention, hidden, public, files) = DataSet(id, label, tags, initial, now(), now(), retention, hidden, false, public, files, 0)
-
-DataSet(dict::Dict) = begin
-    DataSet(
-        UUID(dict["id"]),
-        dict["label"],
-        dict["tags"],
-        stage(dict["stage"]),
-        DateTime(dict["stagechange"]),
-        DateTime(dict["timestamp"]),
-        dict["retention"],
-        dict["hidden"],
-        dict["protected"],
-        dict["public"],
-        File.(dict["files"]),
-        dict["downloads"]
-    )
-end
 
 
 function isequal(x::DataSet, y::DataSet)
@@ -127,36 +96,14 @@ function isequal(x::DataSet, y::DataSet)
 end
 
 
-function unmarshal_dataset(dict::Dict)::Dict{UUID, DataSet}
-    datasets = Dict{UUID, DataSet}()
-
-    foreach(values(dict)) do element
-        ds = DataSet(element)
-        datasets[ds.id] = ds
-    end
-
-    return datasets
-end
-
-
-function JSON.Writer.lower(x::MIME)
-    x |> string
-end
-
-
-function JSON.Writer.lower(x::UUID)
-    x |> string
-end
-
-
 """
 SystemStatus represents the status Mercury at a given point in time.
 
 Some metrics are restricted and might be set to nothing.
 """
 struct StorageStatus
-    count_ds::Int128
-    count_files::Int128
+    count_ds::Int
+    count_files::Int
     used_storage::Union{String,Nothing}
     available_storage::Union{String,Nothing}
     total_storage::Union{String,Nothing}

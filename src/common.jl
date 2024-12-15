@@ -32,7 +32,7 @@ end
 
 Translates a given number of bytes into a easily human readable form of e.g. KiB, MiB, GiB,...
 """
-function format_size(bytes::Union{Int,Int128})::String
+function format_size(bytes::Union{Int,Int})::String
     local size
     
     if bytes < 1024
@@ -80,10 +80,9 @@ end
 
 Returns the storage size of all files of a DataSet in bytes. Even if not all files or chunks were downloaded, yet.
 """
-function storage_size(ds::DataSet)
-    [file.size for file=ds.files] |> sum
+function storage_size(ds)
+    mapreduce(f -> f.size, +, ds.files)    
 end
-
 
 """
     download_uri(ds::DataSet)
@@ -126,7 +125,7 @@ function shortstring(str::Union{AbstractString,Nothing}, maxlen::Int)::String
     end
 
     n = 0   # index of valid codeunits
-    for i in 1:maxlen-3
+    for _ in 1:maxlen-3
         n = nextind(str,n)
     end
 

@@ -21,7 +21,7 @@ function ip_segmentation(handler)
     end
 
     return function(req::HTTP.Request)
-        local clientip::IPv4
+        local clientip
 
         xrealip_header = filter(x -> first(x) == "X-Real-IP", req.headers)
         if isempty(xrealip_header)
@@ -36,10 +36,8 @@ function ip_segmentation(handler)
             end
         end
         
-        n = @chain subnets begin
-            clientip .∈ _
-            sum(_)
-        end
+        # clientip is an element of n specified subnets
+        n = mapreduce(net -> clientip ∈ net, +, subnets)
 
         if n == 1
             req.context[:internal] = true

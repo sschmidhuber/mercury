@@ -34,3 +34,6 @@ data/
 
 # log files
 *.log
+
+# DB files
+*.db
