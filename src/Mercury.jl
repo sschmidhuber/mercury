@@ -5,7 +5,8 @@ module Mercury
 https://xkcd.com/949/
 
 TODOs:
-* migrate from JSON to SQLite
+* review function names for "!"
+* change status / substatus consept for upload feature
 * update architectural documentation
 * update to latest Bootstrap version
     * add automatic dark mode
@@ -97,7 +98,7 @@ function init()
         logger = FormatLogger(logfile) do logfile, args
             println(logfile, args.level, " -- ", Dates.format(now(), dateformat), ": ", args.message, "  (", args._module, ":", args.line, ")")
         end
-        logger = MinLevelLogger(logger, Logging.Info)
+        logger = MinLevelLogger(logger, Logging.Debug)
         global_logger(logger)
     end
 
