@@ -125,8 +125,8 @@ To make this work the a mercury client in julia needs to be implemented, using t
         for _ in 1:2
             res = HTTP.request("GET", "http://127.0.0.1:8123/datasets/$id2/properties", request_header)
             res = res.body |> String |> JSON.parse
-            @info "stage: $(res["stage"])"
-            @test res["stage"] == "scanned" || res["stage"] == "prepared" ||res["stage"] == "available"
+            @info "state: $(res["state"])"
+            @test res["state"] == "scanned" || res["state"] == "prepared" ||res["state"] == "available"
             sleep(2)
         end
 

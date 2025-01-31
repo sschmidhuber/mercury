@@ -133,6 +133,7 @@ function start_webserver(async=true)
 end
 
 function stop_webserver()
+    @info "stop Mercury webserver"
     terminate()
 end
 
@@ -141,6 +142,7 @@ function restart_webserver(async=true)
     start_webserver(async)
 end
 
+atexit(stop_webserver)
 
 if haskey(ENV, "MODE")
     if ENV["MODE"] == "test"    # this mode is used for automated tests

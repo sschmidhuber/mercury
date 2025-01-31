@@ -14,15 +14,71 @@ end
 
 
 """
-    add_dataset(id::UUID, label::String, retention_time::Int, hidden::Bool, public::Bool, files::Vector{File})::DataSet
+    add_dataset(id::UUID, label::String, retention_time::Int, hidden::Bool, public::Bool, files::Vector{File}) -> DataSet
 
 Add a new Data Set
 """
-function add_dataset(id::UUID, label::String, retention_time::Int, hidden::Bool, public::Bool, files::Vector{File})::DataSet
+function add_dataset(id::UUID, label::String, retention_time::Int, hidden::Bool, public::Bool, files::Vector{File})
     @debug "add dataset"
     ds = DataSet(id, strip(label), [], retention_time, hidden, public, files)
     create_dataset(ds)
     return ds
+end
+
+
+"""
+    add_chunk!(ds::DataSet, fid::Int, chunk::Int, blob::AbstractArray) -> UploadProgress
+
+Add a new chunk of a file to a DataSet. Throws a DomainError if any input validation fails.
+Returns the upload progress of the DataSet and the currently uploaded file.
+"""
+function add_chunk!(ds::DataSet, fid::Int, chunk::Int, blob::AbstractArray)
+    # validations
+    if isnothing(ds)
+        @warn "Dataset: $(ds.id) not found, can't add new chunk"
+        throw(DomainError(ds.id, "no DataSet with given ID found"))
+    end
+    if length(ds.files) < fid
+        @warn "File: $fid of DataSet $(ds.id) not found, can't add new chunk"
+        throw(DomainError(fid, "no File with given ID found"))
+    end
+    if ds.files[fid].chunks_received + 1 != chunk || ds.files[fid].chunks_total < chunk
+        @warn "Unexpected chunk: $chunk of file $fid of DataSet $(ds.id), can't add new chunk"
+        throw(DomainError(fid, "unexpected chunk"))
+    end
+    expected_chunk_size = if ds.files[fid].chunks_total > chunk
+        config["network"]["chunk_size"]
+    else
+        # last or only chunk
+        ds.files[fid].size - (chunk - 1) * config["network"]["chunk_size"]
+    end
+    if length(blob) != expected_chunk_size
+        @warn "Unexpected chunk size: $(length(blob)) (expected: $expected_chunk_size) of file $fid of DataSet $(ds.id), can't add new chunk"
+        throw(DomainError(length(blob), "unexpected chunk size"))
+    end
+
+    try
+        create_file_chunk(ds, fid, chunk, blob)
+    catch err
+        showerror(stderr, err)
+        rethrow(err)
+    end
+
+    if ds.files[fid].chunks_total == chunk
+        update_file_chunks_received(ds, fid, chunk, now())
+    else
+        update_file_chunks_received(ds, fid, chunk)
+    end
+    ds.files[fid].chunks_received = chunk
+    progress = upload_progress(ds, fid, chunk)
+    
+    if progress.ds_completed
+        @debug "upload completed, trigger further processing"
+        update_dataset_stage(ds.id, uploaded)
+        Threads.@spawn process_dataset(ds.id)
+    end
+
+    return progress
 end
 
 
@@ -33,6 +89,10 @@ Process a newly uploaded dataset.
 """
 function process_dataset(id::UUID)
     @debug "process a dataset"
+    dsstate = read_dataset_stage(id)
+    if dsstate != uploaded
+        throw(ErrorException("unexpected state: $dsstate"))       
+    end
     if config["skip_malware_check"] && prepare(id)
         update_dataset_promote(id)
     elseif malwarescan(id) && prepare(id)
@@ -81,7 +141,7 @@ end
 """
     prepare(id::UUID)
 
-Preprocess DataSet and set stage to "prepared" before it can be promoted for download.
+Preprocess DataSet and set state to "prepared" before it can be promoted for download.
 Return true if preparation was executed successfully, othewise return false.
 """
 function prepare(id::UUID)::Bool
@@ -127,7 +187,7 @@ Return the number of available data sets.
 """
 function count_ds()
     ds = read_datasets()
-    filter(x -> x.stage == available, ds) |> length
+    filter(x -> x.state == available, ds) |> length
 end
 
 
@@ -155,9 +215,9 @@ function storage_status(internal)::StorageStatus
         if nrow(df) == 0
             count_ds, count_files, used_storage = 0, 0, 0
         else
-            count_ds = df[df.stage .== available,:datasets] |> sum
-            count_files = df[df.stage .== available,:files] |> sum
-            used_storage = df[df.stage .== available,:used_storage] |> sum
+            count_ds = df[df.state .== available,:datasets] |> sum
+            count_files = df[df.state .== available,:files] |> sum
+            used_storage = df[df.state .== available,:used_storage] |> sum
         end        
         available_storage = min(diskstat(config["storage_dir"]).available, config["limits"]["storage"] - used_storage) |> Int
         total_storage = available_storage + used_storage
@@ -165,8 +225,8 @@ function storage_status(internal)::StorageStatus
 
         status = StorageStatus(count_ds, count_files, format_size(used_storage), format_size(available_storage), format_size(total_storage), "$used_relative %")
     else
-        count_ds = df[df.stage .== available .&& df.public .== true,:datasets] |> sum
-        count_files = df[df.stage .== available .&& df.public .== true,:files] |> sum
+        count_ds = df[df.state .== available .&& df.public .== true,:datasets] |> sum
+        count_files = df[df.state .== available .&& df.public .== true,:files] |> sum
         status = StorageStatus(count_ds, count_files)
     end
 
@@ -174,72 +234,19 @@ function storage_status(internal)::StorageStatus
 end
 
 
-"""
-    add_chunk(ds::DataSet, fid::Int, chunk::Int, blob::AbstractArray)::NamedTuple
-
-Add a new chunk of a file to a DataSet. Throws a DomainError if any input validation fails.
-Returns the upload progress of the DataSet and the currently uploaded file.
-"""
-function add_chunk(ds::DataSet, fid::Int, chunk::Int, blob::AbstractArray)::UploadProgress
-    # validations
-    if isnothing(ds)
-        @warn "Dataset: $(ds.id) not found, can't add new chunk"
-        throw(DomainError(ds.id, "no DataSet with given ID found"))
-    end
-    if length(ds.files) < fid
-        @warn "File: $fid of DataSet $(ds.id) not found, can't add new chunk"
-        throw(DomainError(fid, "no File with given ID found"))
-    end
-    if ds.files[fid].chunks_received + 1 != chunk || ds.files[fid].chunks_total < chunk
-        @warn "Unexpected chunk: $chunk of file $fid of DataSet $(ds.id), can't add new chunk"
-        throw(DomainError(fid, "unexpected chunk"))
-    end
-    expected_chunk_size = if ds.files[fid].chunks_total > chunk
-        config["network"]["chunk_size"]
-    else
-        # last or only chunk
-        ds.files[fid].size - (chunk - 1) * config["network"]["chunk_size"]
-    end
-    if length(blob) != expected_chunk_size
-        @warn "Unexpected chunk size: $(length(blob)) (expected: $expected_chunk_size) of file $fid of DataSet $(ds.id), can't add new chunk"
-        throw(DomainError(length(blob), "unexpected chunk size"))
-    end
-
-    try
-        create_file_chunk(ds, fid, chunk, blob)
-    catch err
-        showerror(stderr, err)
-        rethrow(err)
-    end
-
-    if ds.files[fid].chunks_total == chunk
-        update_file_chunks_received(ds, fid, chunk, now())
-    else
-        update_file_chunks_received(ds, fid, chunk)
-    end
-    ds.files[fid].chunks_received = chunk
-    progress = upload_progress(ds, fid, chunk)
-    
-    if progress.ds_completed
-        @debug "upload completed, trigger further processing"
-        Threads.@spawn process_dataset(ds.id)
-    end
-
-    return progress
-end
 
 
 function upload_progress(ds, fid, chunk)::UploadProgress
-    ds_chunks_total = map(file -> file.chunks_total, ds.files) |> sum
-    ds_chunks_received = map(file -> file.chunks_received, ds.files) |> sum
+    ds_chunks_total = mapreduce(file -> file.chunks_total, +, ds.files)
+    ds_chunks_received = mapreduce(file -> file.chunks_received, +, ds.files)
     f_chunks_total = ds.files[fid].chunks_total
     f_chunks_received = chunk
     next_file_id, next_chunk_id = nextchunk(ds, fid, chunk)
 
     return UploadProgress(
-        Int(round(ds_chunks_received/ds_chunks_total * 100, digits=0)),
+        round(Int, ds_chunks_received/ds_chunks_total * 100),
         ds_chunks_received==ds_chunks_total,
-        Int(round(f_chunks_received/f_chunks_total * 100, digits=0)),
+        round(Int, f_chunks_received/f_chunks_total * 100),
         joinpath(ds.files[fid].directory, ds.files[fid].name),
         fid,
         f_chunks_total==f_chunks_received,
@@ -289,27 +296,27 @@ end
 Periodically delete datasets if retention time is exceeded or uploads failed.
 """
 function cleanup()
-    counter = 0
+    counter = 1000
     while true
         ts = now()
         ds = read_datasets()
         counter += 1
 
         foreach(ds) do d
-            if d.stage == available
+            if d.state == available
                 # soft delete DataSets which exceeded their retention time
                 if d.timestamp_created + Hour(d.retention) < ts
                     @info "delete $(d.label), ID: $(d.id)"
                     delete_dataset_soft(d.id)
                 end
-            elseif d.stage == deleted
+            elseif d.state == deleted
                 # hard delete DataSets which were already soft deleted
                 if d.timestamp_stagechange + Hour(config["retention"]["purge"]) < ts
                     @info "permanently delete $(d.label), ID: $(d.id)"
                     delete_dataset_hard(d.id)
                 end
-            elseif d.stage ∈ (initial, scanned, prepared)
-                # hard delete DataSets wich got stuck in initial, scanned or prepared stage
+            elseif d.state ∈ (initial, uploaded, scanned, prepared, changing)
+                # hard delete DataSets wich got stuck in initial, scanned or prepared state
                 if d.timestamp_created + Day(1) < ts
                     @info "remove from tmp layer: $(d.label), ID: $(d.id)"
                     delete_dataset_hard(d.id)

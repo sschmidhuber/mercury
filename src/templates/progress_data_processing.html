@@ -1,7 +1,7 @@
 <li
     id="processData"
     {{#:polling}}
-    hx-get="/rest/datasets/{{:dsid}}/stage"
+    hx-get="/rest/datasets/{{:dsid}}/state"
     hx-trigger="every 1s"
     {{/:polling}}
     hx-swap="outerHTML"

@@ -15,6 +15,7 @@ function ip_segmentation(handler)
     local allow_external_access
     try
         allow_external_access = config["network"]["allow_external_access"]
+        @info "external access allowed: $allow_external_access"
     catch _
         @warn "invalid configuration: \"allow_external_access\""
         allow_external_access = false
@@ -24,12 +25,21 @@ function ip_segmentation(handler)
         local clientip
 
         xrealip_header = filter(x -> first(x) == "X-Real-IP", req.headers)
+        
         if isempty(xrealip_header)
             @error "\"X-Real-IP\" header not found. Ensure the reverse proxy sets the correct remote address."
             return HTTP.Response(500, "Missing header, wrong proxy configuration")
         else
+            xrealip = only(xrealip_header).second
             try
-                clientip = IPv4(last(xrealip_header |> only))
+                clientip = if 7 <= length(xrealip) <= 15
+                    IPv4(xrealip)
+                elseif 39 <= length(xrealip) <= 45
+                    IPv6(xrealip)
+                else
+                    @error "invalid X-Real-IP address: $xrealip"
+                    return HTTP.Response(500, "Invalid address, wrong proxy configuration")
+                end
             catch e
                 @error "invalid \"X-Real-IP\" header: $xrealip_header"
                 return HTTP.Response(500, "Invalid header, wrong proxy configuration")

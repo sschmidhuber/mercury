@@ -50,9 +50,9 @@ function create_dataset(ds::DataSet)
     end
 
     try
-        stmt_ds = SQLite.Stmt(db, "INSERT INTO dataset (id, label, stage, timestamp_created, timestamp_stagechange, retention, hidden, protected, public, downloads) VALUES (?,?,?,?,?,?,?,?,?,?);")
+        stmt_ds = SQLite.Stmt(db, "INSERT INTO dataset (id, label, state, timestamp_created, timestamp_stagechange, retention, hidden, protected, public, downloads) VALUES (?,?,?,?,?,?,?,?,?,?);")
         stmt_f = SQLite.Stmt(db, "INSERT INTO file (dsid, fid, name, directory, size, type, chunks_total, chunks_received, timestamp_created, timestamp_uploaded) VALUES (?,?,?,?,?,?,?,?,?,?);")
-        DBInterface.execute(stmt_ds, (string(ds.id), ds.label, string(ds.stage), string(ds.timestamp_created), string(ds.timestamp_stagechange), ds.retention, ds.hidden, ds.protected, ds.public, ds.downloads))
+        DBInterface.execute(stmt_ds, (string(ds.id), ds.label, string(ds.state), string(ds.timestamp_created), string(ds.timestamp_stagechange), ds.retention, ds.hidden, ds.protected, ds.public, ds.downloads))
         fid = 1
         foreach(ds.files) do f
             DBInterface.execute(stmt_f, (string(ds.id), fid, f.name, f.directory, f.size, string(f.type), f.chunks_total, f.chunks_received, string(f.timestamp_created), missing))
@@ -100,7 +100,7 @@ Return DataSet with given ID or nothing, if the ID was not found.
 function read_dataset(id::UUID)::Union{DataSet,Nothing}
     local ds = nothing
     try
-        stmt = SQLite.Stmt(db, "SELECT d.label, d.stage, d.timestamp_created, d.timestamp_stagechange, d.retention, d.hidden, d.protected, d.public, d.downloads, f.fid, f.name, f.directory, f.size, f.type, f.chunks_total, f.chunks_received, f.timestamp_created AS timestamp_created_f, f.timestamp_uploaded FROM dataset d JOIN file f ON d.id = f.dsid WHERE id = ?;")
+        stmt = SQLite.Stmt(db, "SELECT d.label, d.state, d.timestamp_created, d.timestamp_stagechange, d.retention, d.hidden, d.protected, d.public, d.downloads, f.fid, f.name, f.directory, f.size, f.type, f.chunks_total, f.chunks_received, f.timestamp_created AS timestamp_created_f, f.timestamp_uploaded FROM dataset d JOIN file f ON d.id = f.dsid WHERE id = ?;")
         rs = DBInterface.execute(stmt, (string(id),))
 
         if isempty(rs)
@@ -110,7 +110,7 @@ function read_dataset(id::UUID)::Union{DataSet,Nothing}
         files = []
         for r in rs
             if isnothing(ds)
-                ds = DataSet(id, r.label, [], stage(r.stage), DateTime(r.timestamp_created), DateTime(r.timestamp_stagechange), r.retention, r.hidden, r.protected, r.public, [], r.downloads)
+                ds = DataSet(id, r.label, [], state(r.state), DateTime(r.timestamp_created), DateTime(r.timestamp_stagechange), r.retention, r.hidden, r.protected, r.public, [], r.downloads)
             end
             push!(files, File(r.name, r.directory, r.size, MIME(r.type), r.chunks_total, r.chunks_received, DateTime(r.timestamp_created_f), ismissing(r.timestamp_uploaded) ? nothing : DateTime(r.timestamp_uploaded)))
         end
@@ -126,14 +126,14 @@ end
 
 
 """
-    read_datasets(; stages::Vector{Stage} = Vector{Stage}(), hidden::Union{Nothing,Bool} = nothing, public::Union{Nothing,Bool} = nothing)::Vector{DataSet}
+    read_datasets(; stages::Vector{State} = Vector{State}(), hidden::Union{Nothing,Bool} = nothing, public::Union{Nothing,Bool} = nothing)::Vector{DataSet}
 
 Return a Vector of all DataSets or an empty Vector if there are no DataSets.
 """
-function read_datasets(; stages::Vector{Stage} = Vector{Stage}(), hidden::Union{Nothing,Bool} = nothing, public::Union{Nothing,Bool} = nothing)::Vector{DataSet}
+function read_datasets(; stages::Vector{State} = Vector{State}(), hidden::Union{Nothing,Bool} = nothing, public::Union{Nothing,Bool} = nothing)::Vector{DataSet}
     # build query
-    query= "SELECT id, label, stage, d.timestamp_created, d.timestamp_stagechange, retention, hidden, protected, public, downloads, fid, name, directory, size, type, chunks_total, chunks_received, f.timestamp_created AS timestamp_created_f, f.timestamp_uploaded FROM  dataset d join file f on d.id = f.dsid"
-    stages_criteria = isempty(stages) ? nothing : "stage in $(sql_tuple(stages))"
+    query= "SELECT id, label, state, d.timestamp_created, d.timestamp_stagechange, retention, hidden, protected, public, downloads, fid, name, directory, size, type, chunks_total, chunks_received, f.timestamp_created AS timestamp_created_f, f.timestamp_uploaded FROM  dataset d join file f on d.id = f.dsid"
+    stages_criteria = isempty(stages) ? nothing : "state in $(sql_tuple(stages))"
     hidden_criteria = isnothing(hidden) ? nothing : "hidden = $hidden"
     public_criteria = isnothing(public) ? nothing : "public = $public"
     query = string(
@@ -154,21 +154,21 @@ end
 
 
 """
-    read_datasets(pagesize::Int, page::Int; stages::Vector{Stage} = Vector{Stage}(), hidden::Union{Nothing,Bool} = nothing, public::Union{Nothing,Bool} = nothing)::Vector{DataSet}
+    read_datasets(pagesize::Int, page::Int; stages::Vector{State} = Vector{State}(), hidden::Union{Nothing,Bool} = nothing, public::Union{Nothing,Bool} = nothing)::Vector{DataSet}
 
 Return a Vector of all DataSets of a specific page and a given pagesize or an empty Vector
 if there are no DataSets.
 For pagesize and page, positive values are expected, otherways an ErrorException is thrown.
 """
-function read_datasets(pagesize::Int, page::Int; stages::Vector{Stage} = Vector{Stage}(), hidden::Union{Nothing,Bool} = nothing, public::Union{Nothing,Bool} = nothing)::Vector{DataSet}
+function read_datasets(pagesize::Int, page::Int; stages::Vector{State} = Vector{State}(), hidden::Union{Nothing,Bool} = nothing, public::Union{Nothing,Bool} = nothing)::Vector{DataSet}
     if pagesize <= 0 || page <= 0
         @warn "invalid pagesize: $pagesize or page: $page parameters"
         return Vector{DataSet}()
     end
 
     # build query
-    query= "SELECT id, label, stage, d.timestamp_created, d.timestamp_stagechange, retention, hidden, protected, public, downloads, fid, name, directory, size, type, chunks_total, chunks_received, f.timestamp_created AS timestamp_created_f, f.timestamp_uploaded FROM  dataset d join file f on d.id = f.dsid WHERE f.dsid in (SELECT id FROM dataset LIMIT ? OFFSET ?)"
-    stages_criteria = isempty(stages) ? nothing : "stage in $(sql_tuple(stages))"
+    query= "SELECT id, label, state, d.timestamp_created, d.timestamp_stagechange, retention, hidden, protected, public, downloads, fid, name, directory, size, type, chunks_total, chunks_received, f.timestamp_created AS timestamp_created_f, f.timestamp_uploaded FROM  dataset d join file f on d.id = f.dsid WHERE f.dsid in (SELECT id FROM dataset LIMIT ? OFFSET ?)"
+    stages_criteria = isempty(stages) ? nothing : "state in $(sql_tuple(stages))"
     hidden_criteria = isnothing(hidden) ? nothing : "hidden = $hidden"
     public_criteria = isnothing(public) ? nothing : "public = $public"
     query = string(
@@ -233,12 +233,12 @@ function rs_to_datasets(rs)
 
     for r in rs
         if isnothing(ds)    # no dataset processed yet
-            ds = DataSet(UUID(r.id), r.label, [], stage(r.stage), DateTime(r.timestamp_created), DateTime(r.timestamp_stagechange), r.retention, r.hidden, r.protected, r.public, [], r.downloads)
+            ds = DataSet(UUID(r.id), r.label, [], state(r.state), DateTime(r.timestamp_created), DateTime(r.timestamp_stagechange), r.retention, r.hidden, r.protected, r.public, [], r.downloads)
         elseif string(ds.id) != r.id    # move on to processing next dataset
             ds.files = deepcopy(files)
             push!(datasets, ds)
             empty!(files)
-            ds = DataSet(UUID(r.id), r.label, [], stage(r.stage), DateTime(r.timestamp_created), DateTime(r.timestamp_stagechange), r.retention, r.hidden, r.protected, r.public, [], r.downloads)
+            ds = DataSet(UUID(r.id), r.label, [], state(r.state), DateTime(r.timestamp_created), DateTime(r.timestamp_stagechange), r.retention, r.hidden, r.protected, r.public, [], r.downloads)
         end
         push!(files, File(r.name, r.directory, r.size, MIME(r.type), r.chunks_total, r.chunks_received, DateTime(r.timestamp_created_f), ismissing(r.timestamp_uploaded) ? nothing : DateTime(r.timestamp_uploaded)))
     end
@@ -255,7 +255,7 @@ end
 """
     read_dataset_metrics() -> DataFrame
 
-Returns some metrics, grouped by stage and public availability about the stored datasets:
+Returns some metrics, grouped by state and public availability about the stored datasets:
     * number of datasets
     * number of files
     * used storage
@@ -263,8 +263,8 @@ Returns some metrics, grouped by stage and public availability about the stored 
 function read_dataset_metrics()
     local df
     try
-        df = DBInterface.execute(db, "SELECT stage, public, count(DISTINCT id) AS datasets, count(*) AS files, sum(size) AS used_storage FROM dataset d join file f on d.id = f.dsid GROUP BY stage, public;") |> DataFrame
-        df.stage = stage.(df.stage)
+        df = DBInterface.execute(db, "SELECT state, public, count(DISTINCT id) AS datasets, count(*) AS files, sum(size) AS used_storage FROM dataset d join file f on d.id = f.dsid GROUP BY state, public;") |> DataFrame
+        df.state = state.(df.state)
         df.public = map(x -> x == 0 ? false : true, df.public)
     catch error
         @error "failed to retrieve datasets"
@@ -276,25 +276,25 @@ end
 
 
 """
-    read_dataset_stage(id::UUID) -> Union{Nothing,Stage}
+    read_dataset_stage(id::UUID) -> Union{Nothing,State}
 
-returns the stage of the dataset corresponding to the given ID or nothing, if no dataset
+returns the state of the dataset corresponding to the given ID or nothing, if no dataset
 with the given ID exists.
 """
 function read_dataset_stage(id::UUID)
     try
-        stmt = SQLite.Stmt(db, "SELECT stage FROM dataset WHERE id = ?;")
+        stmt = SQLite.Stmt(db, "SELECT state FROM dataset WHERE id = ?;")
         rs = DBInterface.execute(stmt, (string(id),))
 
         if isempty(rs)
             return nothing
         end
 
-        return (first(rs)).stage |> stage
+        return (first(rs)).state |> state
 
         #@infiltrate
     catch error
-        @error "faild to read stage from dataset: $id"
+        @error "faild to read state from dataset: $id"
         showerror(stderr, error)
     end
 
@@ -339,16 +339,16 @@ end
 
 
 """
-    update_dataset_stage(id::UUID, stage::Stage)
+    update_dataset_stage(id::UUID, state::State)
 
-Set the stage of a dataset to the given stage value.
+Set the state of a dataset to the given state value.
 """
-function update_dataset_stage(id::UUID, stage::Stage)
+function update_dataset_stage(id::UUID, state::State)
     try
-        stmt = SQLite.Stmt(db, "UPDATE dataset SET stage = ?, timestamp_stagechange = ?  WHERE id = ?;")
-        DBInterface.execute(stmt, (string(stage), string(now()), string(id)))
+        stmt = SQLite.Stmt(db, "UPDATE dataset SET state = ?, timestamp_stagechange = ?  WHERE id = ?;")
+        DBInterface.execute(stmt, (string(state), string(now()), string(id)))
     catch error
-        @error "failed to set stage in dataset: $id to $stage"
+        @error "failed to set state in dataset: $id to $state"
         showerror(stderr, error)
     end
 
@@ -361,7 +361,7 @@ end
     update_dataset_promote(id::UUID)
 
 Promote dataset from "tmp" to "live" storage layer, to make it available for download.
-The dataset stage will be set to :available.
+The dataset state will be set to :available.
 """
 function update_dataset_promote(id::UUID)
     @info "promote dataset: $id"
@@ -477,14 +477,14 @@ function checkds(ds::DataSet)
     tmppath = joinpath(config["storage_dir"], "tmp", string(ds.id))
     livepath = joinpath(config["storage_dir"], "live", string(ds.id))
 
-    if ds.stage == available
+    if ds.state == available
         if ispath(tmppath)
-            @warn "$(ds.label) - $(ds.stage): inconsistend data found"
+            @warn "$(ds.label) - $(ds.state): inconsistend data found"
             rm(tmppath, recursive=true)
         end
-    elseif ds.stage == initial
+    elseif ds.state == initial
         if ispath(livepath)
-            @warn "$(ds.label) - $(ds.stage): violation of data lifecycle constraint found"
+            @warn "$(ds.label) - $(ds.state): violation of data lifecycle constraint found"
             rm(livepath, recursive=true)
         end
     end
@@ -504,8 +504,8 @@ function checkstorage()
     foreach(UUID.(readdir(tmppath))) do id
         ds = read_dataset(id)
         if !isnothing(ds)
-            if ds.stage == available
-                @warn "$(ds.label) - $(ds.stage): inconsistent DB record found"
+            if ds.state == available
+                @warn "$(ds.label) - $(ds.state): inconsistent DB record found"
                 delete_dataset_hard(id)
             end
         else
@@ -517,8 +517,8 @@ function checkstorage()
     foreach(UUID.(readdir(livepath))) do id
         ds = read_dataset(UUID(id))
         if !isnothing(ds)
-            if ds.stage == initial
-                @warn "$(ds.label) - $(ds.stage): inconsistend DB record found"
+            if ds.state == initial
+                @warn "$(ds.label) - $(ds.state): inconsistend DB record found"
                 delete_dataset_hard(id)
             end
         else

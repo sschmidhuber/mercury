@@ -303,7 +303,7 @@ end
         if ds |> isnothing
             return HTTP.Response(422, Dict("error" => "invalid request content", "detail" => "invalid DataSet ID: $dsid") |> JSON3.write)
         end
-        progress = add_chunk(ds, parse(Int, fid), parse(Int, chunk), blob)
+        progress = add_chunk!(ds, parse(Int, fid), parse(Int, chunk), blob)
     catch err
         if err isa DomainError
             return HTTP.Response(422, Dict("error" => "invalid request content", "detail" => "failed to process chunk") |> JSON3.write)
@@ -337,7 +337,7 @@ end
         end
         
         blob = (content |> only).data.data
-        progress = add_chunk(UUID(dsid), parse(Int, fid), parse(Int, chunk), blob)
+        progress = add_chunk!(UUID(dsid), parse(Int, fid), parse(Int, chunk), blob)
     catch err
         if err isa DomainError
             return HTTP.Response(422, Dict("error" => "invalid request content", "detail" => "failed to process chunk") |> JSON.json)
@@ -353,13 +353,13 @@ end
 end=#
 
 
-# requests the stage of a Data Set (e.g. while created)
-@get rest("/datasets/{id}/stage") function(req, id::String)
+# requests the state of a Data Set (e.g. while created)
+@get rest("/datasets/{id}/state") function(req, id::String)
     dsid = UUID(id)
     try
-        stage = read_dataset_stage(dsid)
-        if stage ∈ [initial, scanned, prepared]
-            return render_progress_data_processing(stage, dsid)
+        state = read_dataset_stage(dsid)
+        if state ∈ [initial, scanned, prepared]
+            return render_progress_data_processing(state, dsid)
         else
             ds = read_dataset(dsid)
             return render_progress_data_processing(ds)
@@ -383,7 +383,7 @@ end
 
     # check availability
     ds::DataSet = read_dataset(dsid)
-    if isnothing(ds) || ds.stage != available
+    if isnothing(ds) || ds.state != available
         sleep(5)
         return HTTP.Response(404, Dict("error" => "resource not found", "detail" => "there is no data set available with ID: $id") |> JSON3.write)
     end

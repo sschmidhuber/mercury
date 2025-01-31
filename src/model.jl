@@ -34,33 +34,36 @@ end
 
 
 """
-A DataSet moves through different stages during its lifecycle:
+A DataSet moves through different states during its lifecycle:
 
-        1. initial: dataset created
-        2. scanned: malware scan completed with no findings
-        3. prepared: DataSet preprocessing completed successfully
-        4. available: DataSet can be downloaded
-        5. deleted: After retention time the DataSet will be marked as deleted
+        * initial: A newly created DataSet
+        * uploaded: All files of the initial DataSet were uploaded
+        * scanned: Malware scan completed successfully with no findings
+        * prepared: DataSet preprocessing completed successfully
+        * available: DataSet is available for downloaded
+        * changing: DataSet is currently being changed, after it was available
+        * deleted: After retention time the DataSet will be marked as deleted
 """
-@enum Stage begin
+@enum State begin
     initial
+    uploaded
     scanned
     prepared
     available
+    changing
     deleted
 end
 
 """
-    stage(str::AbstractString)::Stage
+    state(str::AbstractString) -> State
 
-Return the stage enum corresponding to the given string representation.
+Return the state enum corresponding to the given string representation.
 """
-function stage(str::AbstractString)::Stage
+function state(str::AbstractString)
     try
         getproperty(Mercury, Symbol(str))
     catch _
-        @error "invalid stage: $str"
-        throw(DomainError(str))
+        throw(ErrorException("invalid state: $str"))
     end
 end
 
@@ -71,7 +74,7 @@ mutable struct DataSet
     id::UUID
     label::String
     tags::Vector{String}
-    stage::Stage
+    state::State
     timestamp_created::DateTime
     timestamp_stagechange::DateTime
     retention::Int

@@ -122,10 +122,10 @@ function render_progress_upload_completed(ds::DataSet, progress::UploadProgress)
 end
 
 
-function render_progress_data_processing(stage::Stage, dsid::UUID)
+function render_progress_data_processing(state::State, dsid::UUID)
     tbl = Mustache.load("templates/progress_data_processing.html")
 
-    if stage ∈ [initial, scanned, prepared]
+    if state ∈ [initial, scanned, prepared]
         Mustache.render(tbl, color="bg-primary", text="in progress", polling=true, dsid=dsid)
     else
         Mustache.render(tbl, color="bg-danger", text="failed", polling=false)
@@ -136,7 +136,7 @@ end
 function render_progress_data_processing(ds::Union{DataSet,Nothing})
     tbl = Mustache.load("templates/progress_data_processing.html")
 
-    if ds.stage == available
+    if ds.state == available
         ds_html = render_datasets([ds])
         Mustache.render(tbl, color="bg-success", text="done", polling=false, dataset=ds_html)
     else

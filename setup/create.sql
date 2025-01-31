@@ -3,7 +3,7 @@ PRAGMA journal_mode=wal;
 CREATE TABLE "dataset" (
     "id" TEXT,
     "label" TEXT,
-    "stage" TEXT,
+    "state" TEXT,
     "timestamp_created" TEXT,
     "timestamp_stagechange" TEXT,
     "retention" INTEGER,
