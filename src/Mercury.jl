@@ -5,14 +5,11 @@ module Mercury
 https://xkcd.com/949/
 
 TODOs:
-* review function names for "!"
-* change status / substatus consept for upload feature
-* update architectural documentation
+* add files to existing dataset
+* external access support (upload)
 * update to latest Bootstrap version
     * add automatic dark mode
 * improve upload status UX
-* add files to existing dataset
-* external access support (upload)
 * search data sets, get hidden data sets by ID
 * set log level in config file
 * performance tests

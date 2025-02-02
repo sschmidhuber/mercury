@@ -1,1 +1,0 @@
-nohup julia -t auto,1 --project --startup-file=no --quiet $(dirname $0)/src/Mercury.jl

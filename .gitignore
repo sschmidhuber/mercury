@@ -37,3 +37,7 @@ data/
 
 # DB files
 *.db
+
+# temporary files created
+mercury.out
+Mercury.pid

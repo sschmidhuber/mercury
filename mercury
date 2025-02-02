@@ -1,0 +1,101 @@
+#! /usr/bin/env bash
+
+# start / stop script for Mercury
+
+# THE SOFTWARE IS PROVIDED ‘AS IS’, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT.
+
+
+## options
+
+set -o noclobber
+set -o errexit
+set -o pipefail
+set -o nounset
+
+
+## constants
+HELP="Usage: mercury [command]\n\n
+
+Following commands are supportet:\n\n
+
+start \t\t # start the Mercury Server\n
+stop \t\t # stop the Mercury Server\n
+help \t\t # show this help text\n\n
+
+Examples:\n
+ mercury start \t # start Mercury server\n
+ mercury stop \t # stop Mercury server
+"
+
+DIR=$(dirname $0)
+
+
+## functions
+start_mercury() {
+    if [[ -f ${DIR}/Mercury.pid ]]; then
+        echo "Mercury is already running"
+        exit 1
+    else
+        echo -n "Starting Mercury Server "
+        if [[ -f ${DIR}/mercury.out ]]; then
+            rm ${DIR}/mercury.out
+        fi
+        nohup julia -t auto,1 --project=${DIR} --startup-file=no --quiet ${DIR}/src/Mercury.jl > ${DIR}/mercury.out 2>&1 &
+        echo $! > ${DIR}/Mercury.pid
+
+        # get server configuration
+        ip=$(grep "ip = " ${DIR}/config/config.toml | cut -d '"' -f 2)
+        port=$(grep "port = " ${DIR}/config/config.toml | cut -d " " -f 3)
+
+        for i in $(seq 1 30); do
+            echo -n "."            
+            if curl -s -o /dev/null -H "X-Real-IP: 127.0.0.1" http://${ip}:${port}/index.html; then
+                echo " Mercury is up and running at http://${ip}:${port}"
+                exit 0
+            fi
+            sleep 3
+        done
+        echo " failed to start Mercury"
+        exit 1
+    fi
+}
+
+stop_mercury() {
+    if [[ -f ${DIR}/Mercury.pid ]]; then
+        echo "Stopping Mercury Server ..."
+        kill $(cat ${DIR}/Mercury.pid)
+        rm ${DIR}/Mercury.pid
+    else
+        echo "Mercury is not running"
+        exit 1
+    fi
+}
+
+main() {
+    if [[ $# -eq 0 ]]; then
+        echo -e $HELP
+        exit 1
+    fi
+    case $1 in
+        start)
+            start_mercury
+            ;;
+        stop)
+            stop_mercury
+            ;;
+        help | -h | --help)
+            echo -e $HELP
+            ;;
+        *)
+            echo -e $HELP
+            exit 1
+            ;;
+    esac
+}
+
+
+## entrypoint
+main $@
+exit 0
